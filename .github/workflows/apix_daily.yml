@@ -67,14 +67,21 @@ jobs:
               xvfb-run python3 indigo/indigo_scraper_uc.py
           fi
 
+      - name: Compute Daily Index
+        run: |
+          # Compile today's raw CSVs into the master index
+          python3 compute_daily_index.py
+
       - name: Commit and Push CSVs
         run: |
           git config --global user.name "APIx Github Bot"
           git config --global user.email "bot@apix.local"
           
-          # Add the new folders/files created in apix_data/raw/
+          # Add the new folders/files created in apix_data/
           git add apix_data/raw/
+          git add apix_data/index/
+          git add compute_daily_index.py
           
           # Commit only if there are changes
-          git diff --quiet && git diff --staged --quiet || git commit -m "Automated CPI Scrape: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Automated CPI Scrape & Index: $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
