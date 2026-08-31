@@ -45,3 +45,10 @@ cron_log.txt
 
 # Note: We are explicitly NOT ignoring apix_data/raw/ because we want 
 # GitHub Actions to commit and push the CSVs back to the repo.
+
+# Debug files
+debug_*.py
+indigo_debug.html
+indigo_search_debug.png
+calendar_dump.html
+dump_dom.py
