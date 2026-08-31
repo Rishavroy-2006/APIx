@@ -1,0 +1,6 @@
+origin,destination,carrier_code,carrier_name,flight_num,travel_date,advance_purchase_days,fare_class,base_fare,taxes_and_fees,total_fare,fare_split_estimated,departure_time,status,scraped_at,capture_run
+MAA,DEL,SG,SpiceJet,unknown,2026-09-01,1,unknown,,,,False,unknown,no_flights,2026-08-30T22:04:40.352964+00:00,2026-08-30_2159IST
+MAA,DEL,SG,SpiceJet,unknown,2026-09-07,7,unknown,,,,False,unknown,no_flights,2026-08-30T22:10:03.712195+00:00,2026-08-30_2159IST
+MAA,DEL,SG,SpiceJet,unknown,2026-09-15,15,unknown,,,,False,unknown,no_flights,2026-08-30T22:15:27.728084+00:00,2026-08-30_2159IST
+MAA,DEL,SG,SpiceJet,unknown,2026-09-30,30,unknown,,,,False,unknown,no_flights,2026-08-30T22:20:59.225798+00:00,2026-08-30_2159IST
+MAA,DEL,SG,SpiceJet,unknown,2026-10-15,45,unknown,,,,False,unknown,no_flights,2026-08-30T22:26:33.033108+00:00,2026-08-30_2159IST
