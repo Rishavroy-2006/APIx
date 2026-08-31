@@ -40,32 +40,9 @@ jobs:
           # Xvfb is required because undetected-chromedriver needs a "real" display to run,
           # and Linux servers don't have monitors attached.
 
-      - name: Run Scrapers (Intelligent Chunking)
+      - name: Run Scrapers (Smart Orchestrator)
         run: |
-          # Check the current UTC hour to determine which chunk to run
-          HOUR=$(date -u +"%H")
-          
-          echo "Current UTC Hour is: $HOUR"
-          
-          # We use ranges (-ge, -lt) because GitHub Actions crons are sometimes delayed by 15-30 mins
-          if [ "$HOUR" -ge 4 ] && [ "$HOUR" -lt 10 ]; then
-              echo "🌅 MORNING RUN: SpiceJet (All) + IndiGo (T+1, T+7)"
-              xvfb-run python3 spicejet/spicejet_scraper.py
-              xvfb-run python3 indigo/indigo_scraper_uc.py --windows 1,7
-              
-          elif [ "$HOUR" -ge 12 ] && [ "$HOUR" -lt 16 ]; then
-              echo "🌇 EVENING RUN: IndiGo (T+15, T+30)"
-              xvfb-run python3 indigo/indigo_scraper_uc.py --windows 15,30
-              
-          elif [ "$HOUR" -ge 17 ] && [ "$HOUR" -lt 23 ]; then
-              echo "🌙 NIGHT RUN: IndiGo (T+45)"
-              xvfb-run python3 indigo/indigo_scraper_uc.py --windows 45
-              
-          else
-              echo "⚙️ MANUAL/FALLBACK RUN: Running everything!"
-              xvfb-run python3 spicejet/spicejet_scraper.py
-              xvfb-run python3 indigo/indigo_scraper_uc.py
-          fi
+          python3 smart_orchestrator.py
 
       - name: Compute Daily Index
         run: |
