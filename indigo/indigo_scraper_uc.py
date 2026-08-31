@@ -307,7 +307,6 @@ def run(target_windows=None):
             
             print("Starting fresh undetected-chromedriver session...")
             options = uc.ChromeOptions()
-            options.add_argument(f'--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{random.randint(110, 120)}.0.0.0 Safari/537.36')
             driver = uc.Chrome(options=options, version_main=151)
             
             try:
