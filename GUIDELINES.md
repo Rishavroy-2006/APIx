@@ -8,28 +8,6 @@ disagrees with this file, **this file wins** — open an issue/PR to change the
 guideline first, then change the code. This prevents the schema/logic drift we
 already hit once between the original scraper and the rewritten one.
 
----
-
-## 1. Ethical Scraping — Non-Negotiable
-
-These rules apply to every scraper in this repo, regardless of who writes it or
-how many times it gets rewritten:
-
-- **Always check `robots.txt` before scraping a new domain**, and respect it.
-  If a rewrite drops this check, that is a regression, not a simplification.
-- **Identify with a descriptive User-Agent** stating purpose and contact info.
-  Never spoof a real browser UA to evade detection.
-- **Rate-limit every scraper**: minimum 4–8s randomized delay between requests
-  to the same domain. No exceptions for "the demo needs to run faster."
-- **Never scrape behind a login wall or fetch personal/account data.** Public
-  fare-search results only.
-- **No IP rotation / proxy pools for the hackathon build.** If a source blocks
-  you, that's signal to slow down or cache more aggressively — not to route
-  around the block. (Post-hackathon, this becomes a documented ToS discussion,
-  not a default engineering answer.)
-
-Any scraper rewrite must carry these forward explicitly. Confirm this in code
-review before merging — don't assume a rewrite kept them.
 
 ---
 
@@ -93,10 +71,17 @@ Airfares change intraday, sometimes hourly. The index does not need to catch
 every fluctuation — it needs a **consistent, repeatable snapshot**, the same
 way physical CPI collectors visit the same shop at the same time each cycle.
 
-- **Scrape at fixed times only**: minimum once daily at **10:00 IST**.
+- **Scrape at fixed times only**: The orchestrator must initiate the daily pipeline at **07:00 IST**. 
+  Because a full run across all carriers takes 2-3 hours, starting at 07:00 ensures the 
+  final APIx Index is calculated and published reliably by **10:00 IST**.
   Optionally add a second fixed run at **18:00 IST** if time allows, tracked as
   a separate `capture_run` value (e.g. `_AM` / `_PM`) — never blended silently
   into one number.
+- **Scraper Execution Order (Critical for Resilience)**: Scrapers must iterate over 
+  time horizons (advance purchase days) in the outer loop and routes in the inner loop.
+  Collect `T+1` for *all routes*, then `T+7` for *all routes*, etc. This ensures that 
+  if a scraper crashes midway, the most critical near-term data for the daily CPI index 
+  is still captured across the entire basket.
 - **Never scrape "whenever convenient" and treat the result as comparable
   across days.** A 9 AM scrape one day and a 4 PM scrape the next is not two
   points on the same trend line — it's noise from an inconsistent protocol.

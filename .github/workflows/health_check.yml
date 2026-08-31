@@ -1,0 +1,57 @@
+name: APIx Health Check
+
+on:
+  schedule:
+    # 02:00 UTC = 07:30 AM IST (Morning Health Check)
+    - cron: '0 2 * * *'
+    # 13:00 UTC = 06:30 PM IST (Evening Health Check)
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # Required to trigger another workflow
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check 7 AM Run Status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking the status of the primary APIx Daily Scrapers workflow..."
+          
+          # Fetch the most recent run of the primary workflow
+          RECENT_RUN=$(gh run list --workflow "apix_daily.yml" --limit 1 --json status,conclusion)
+          
+          STATUS=$(echo $RECENT_RUN | jq -r '.[0].status')
+          CONCLUSION=$(echo $RECENT_RUN | jq -r '.[0].conclusion')
+          
+          echo "Recent run status: $STATUS"
+          echo "Recent run conclusion: $CONCLUSION"
+          
+          if [[ "$STATUS" == "in_progress" || "$STATUS" == "queued" ]]; then
+            echo "✅ The 7:00 AM run is currently running or queued. All good!"
+            exit 0
+          fi
+          
+          # Only check today's date so we don't accidentally look at yesterday's success
+          TODAY=$(date -u +"%Y-%m-%d")
+          RUN_DATE=$(gh run list --workflow "apix_daily.yml" --limit 1 --json createdAt | jq -r '.[0].createdAt' | cut -d'T' -f1)
+          
+          if [[ "$CONCLUSION" == "success" && "$RUN_DATE" == "$TODAY" ]]; then
+            echo "✅ The 7:00 AM run already completed successfully today. All good!"
+            exit 0
+          fi
+          
+          echo "❌ The 7:00 AM run failed, was cancelled, or completely missed its schedule!"
+          echo "Triggering a new run right now using GitHub CLI..."
+          
+          gh workflow run apix_daily.yml
+          
+          echo "Run triggered."
+          echo "Exiting with error code 1 so GitHub automatically emails rishavroy2006@gmail.com to alert you!"
+          exit 1

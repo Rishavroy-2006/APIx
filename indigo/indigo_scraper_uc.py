@@ -67,7 +67,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
     
     # Python 3.12+ safe UTC time
     import datetime as dt
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
     now_iso = now.isoformat()
     capture_run = now.strftime("%Y-%m-%d_%H%MIST") # using IST as a convention for run tag
 
@@ -283,7 +283,7 @@ def run(target_windows=None):
     import datetime as dt
     import os
     
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
     today_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H%MIST")
     

@@ -137,7 +137,7 @@ def run(target_windows=None):
     import datetime as dt
     import os
     
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
     capture_run = now.strftime("%Y-%m-%d_%H%MIST")
     today = dt.date.today()
     today_str = today.strftime("%Y-%m-%d")

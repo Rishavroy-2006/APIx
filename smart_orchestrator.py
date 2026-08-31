@@ -1,7 +1,7 @@
 import os
 import glob
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import subprocess
 
 def get_completed_horizons(carrier_code, date_str):
@@ -46,7 +46,7 @@ def run_scraper(scraper_path, windows_set):
         subprocess.run(cmd, check=True)
 
 def main():
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d")
     required = {1, 7, 15, 30, 45}
     
     print(f"🔍 Checking APIx Data State for {today}")
@@ -63,13 +63,20 @@ def main():
     print(f"  -> IndiGo (6E) completed:   {ig_completed}")
     print(f"  -> IndiGo (6E) missing:     {ig_missing}")
     
-    if not sg_missing and not ig_missing:
+    # Check Akasa (QP)
+    qp_completed = get_completed_horizons("QP", today)
+    qp_missing = required - qp_completed
+    print(f"  -> Akasa Air (QP) completed:{qp_completed}")
+    print(f"  -> Akasa Air (QP) missing:  {qp_missing}")
+    
+    if not sg_missing and not ig_missing and not qp_missing:
         print("\n✅ All Required Data for today has been collected! Exiting gracefully.")
         return
         
     # Execute missing scrapes
     run_scraper("spicejet/spicejet_scraper.py", sg_missing)
     run_scraper("indigo/indigo_scraper_uc.py", ig_missing)
+    run_scraper("akasa/akasa_scraper.py", qp_missing)
     
     print("\n✅ Orchestrator execution complete.")
 
