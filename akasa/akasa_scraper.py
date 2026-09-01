@@ -59,32 +59,55 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
 
         # 1. From field
         print(f"  [{origin}->{dest}] Entering Origin ({origin})...")
-        from_input = wait.until(EC.element_to_be_clickable((By.ID, "From")))
-        from_input.click()
+        # Handle potential overlay / cookie consent on Akasa
+        try:
+            cookie_btn = driver.find_elements(By.XPATH, "//button[contains(., 'Accept') or contains(., 'Agree')]")
+            if cookie_btn:
+                driver.execute_script("arguments[0].click();", cookie_btn[0])
+                time.sleep(1)
+        except Exception:
+            pass
+
+        from_input = wait.until(EC.presence_of_element_located((By.ID, "From")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", from_input)
+        time.sleep(0.5)
+        try:
+            from_input.click()
+        except Exception:
+            driver.execute_script("arguments[0].click();", from_input)
+
         time.sleep(random.uniform(0.8, 1.4))
         from_input.send_keys(Keys.CONTROL + "a")
         from_input.send_keys(Keys.BACKSPACE)
+        driver.execute_script("arguments[0].value = '';", from_input)
         human_type(from_input, origin)
         time.sleep(random.uniform(1.5, 2.5))
         from_option = wait.until(EC.element_to_be_clickable(
             (By.XPATH, f"//div[contains(text(), '{origin}')] | //p[contains(text(), '{origin}')] | //span[contains(text(), '{origin}')]")
         ))
-        from_option.click()
+        driver.execute_script("arguments[0].click();", from_option)
         time.sleep(random.uniform(0.8, 1.4))
 
         # 2. To field
         print(f"  [{origin}->{dest}] Entering Destination ({dest})...")
-        to_input = wait.until(EC.element_to_be_clickable((By.ID, "To")))
-        to_input.click()
+        to_input = wait.until(EC.presence_of_element_located((By.ID, "To")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", to_input)
+        time.sleep(0.5)
+        try:
+            to_input.click()
+        except Exception:
+            driver.execute_script("arguments[0].click();", to_input)
+
         time.sleep(random.uniform(0.8, 1.4))
         to_input.send_keys(Keys.CONTROL + "a")
         to_input.send_keys(Keys.BACKSPACE)
+        driver.execute_script("arguments[0].value = '';", to_input)
         human_type(to_input, dest)
         time.sleep(random.uniform(1.5, 2.5))
         to_option = wait.until(EC.element_to_be_clickable(
             (By.XPATH, f"//div[contains(text(), '{dest}')] | //p[contains(text(), '{dest}')] | //span[contains(text(), '{dest}')]")
         ))
-        to_option.click()
+        driver.execute_script("arguments[0].click();", to_option)
         time.sleep(random.uniform(0.8, 1.4))
 
         # 3. Date
