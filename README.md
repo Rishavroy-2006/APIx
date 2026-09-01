@@ -1,145 +1,225 @@
-# APIx: Real-time Airfare Price Index
+# APIx — Real-time Airfare Price Index
 
-> Modernizing India's official inflation number (CPI) through smart automation and real-time scraping.
+> Modernising India's official inflation number (CPI) through smart automation and real-time scraping.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square)
-![Selenium](https://img.shields.io/badge/Selenium-Undetected_Chromedriver-green?style=flat-square)
+![Carriers](https://img.shields.io/badge/Carriers-4%20Airlines-orange?style=flat-square)
+![SeleniumBase](https://img.shields.io/badge/SeleniumBase-UC_Mode-green?style=flat-square)
 ![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)
 
-India’s official inflation number treats airfares like it’s still 2005. The current methodology relies on manual price checks a few times a month, despite prices swinging by 300% in a single day and 90% of bookings happening online. **APIx** fixes this. It is a resilient, automated data pipeline that continuously scrapes dynamic fare data from major airlines (IndiGo, SpiceJet), normalizes it, and constructs a statistically rigorous, DGCA-weighted price index. It completely replaces manual surveys with a real-time, automated data feed for the MoSPI and RBI.
+India's official inflation number treats airfares like it's still 2005. The current methodology relies on manual price checks a few times a month, despite prices swinging by 300% in a single day and 90% of bookings happening online. **APIx** fixes this — a resilient, automated data pipeline that scrapes live fare data from **4 major Indian airlines** (IndiGo, Air India, SpiceJet, Akasa Air), normalises it into a unified schema, and computes a statistically rigorous, DGCA-weighted price index. It completely replaces manual surveys with a real-time, automated data feed for MoSPI and RBI.
 
-**demo:** [Video link pending / insert here]
+---
 
 ## How It Works
 
 ```mermaid
 sequenceDiagram
-    participant GitHub as GitHub Actions
-    participant Orch as Smart Orchestrator
-    participant Scraper as APIx Scrapers
-    participant Airline as Airline / OTA
-    participant Compute as Index Engine
-    
-    GitHub->>Orch: Trigger Daily Cron
-    Orch->>Orch: Scan local CSVs & find missing T+ windows
-    Orch->>Scraper: Execute missing T+ horizons
-    Scraper->>Airline: Init stealth browser session
-    Airline-->>Scraper: HTML / React payload
-    Scraper->>Scraper: Parse FareQuote schema
-    Scraper-->>Orch: Append to raw route CSVs
-    Orch->>Compute: Trigger deduplication
-    Compute-->>GitHub: Generate master apix_index_daily.csv
+    participant GA  as GitHub Actions (07:00 IST)
+    participant Orch as smart_orchestrator.py
+    participant Scraper as Airline Scrapers (×4)
+    participant Airline as Airline Website
+    participant Compute as compute_daily_index.py
+
+    GA->>Orch: Trigger Daily Cron
+    Orch->>Orch: Scan apix_data/raw/ — find missing T+ windows
+    Orch->>Scraper: Run only what's missing (6E → AI → SG → QP)
+    Scraper->>Airline: Init stealth browser (UC mode, headful)
+    Airline-->>Scraper: Dynamic HTML / SPA payload
+    Scraper->>Scraper: Parse FareQuote → validate airports → append CSV
+    Scraper-->>Orch: ✅ Done (or ❌ logged)
+    Orch->>Compute: Trigger index computation
+    Compute-->>GA: Commit apix_index_daily.csv to repo
 ```
+
+---
 
 ## Architecture
 
 ```mermaid
 graph TD
-    subgraph Automation
-        GA[GitHub Actions Cron] --> SO[smart_orchestrator.py]
+    subgraph Automation ["⏰ Automation (GitHub Actions)"]
+        GA[Cron: 07:00 IST] --> SH[schedule_apix.sh]
+        SH --> SO[smart_orchestrator.py]
     end
-    
-    subgraph Data Acquisition Layer
-        SO --> I(IndiGo Stealth Scraper)
-        SO --> S(SpiceJet Scraper)
+
+    subgraph Scrapers ["✈️ Data Acquisition Layer"]
+        SO --> I(IndiGo · 6E)
+        SO --> AI(Air India · AI / IX)
+        SO --> S(SpiceJet · SG)
+        SO --> AK(Akasa Air · QP)
     end
-    
-    subgraph Storage & Normalization
-        I -- Appends --> RAW[(apix_data/raw/)]
-        S -- Appends --> RAW
+
+    subgraph Storage ["💾 Storage & Normalisation"]
+        I  -- Appends --> RAW[(apix_data/raw/YYYY-MM-DD/)]
+        AI -- Appends --> RAW
+        S  -- Appends --> RAW
+        AK -- Appends --> RAW
     end
-    
-    subgraph Processing Engine
+
+    subgraph Processing ["📊 Processing Engine"]
         RAW --> CDI[compute_daily_index.py]
-        CDI -- Deduplicates & Indexes --> IDX[(apix_data/index/)]
+        CDI --> IDX[(apix_data/index/apix_index_daily.csv)]
     end
 ```
+
+---
+
+## Repo Structure
+
+```
+SIH/
+├── indigo/
+│   └── indigo_scraper_uc.py       # IndiGo (6E) — SeleniumBase UC mode
+├── air_india/
+│   └── air_india_scraper.py       # Air India (AI/IX) — SeleniumBase UC mode
+├── spicejet/
+│   └── spicejet_scraper.py        # SpiceJet (SG) — undetected-chromedriver
+├── akasa/
+│   └── akasa_scraper.py           # Akasa Air (QP) — undetected-chromedriver
+├── apix_data/
+│   ├── raw/YYYY-MM-DD/            # One canonical CSV per carrier per run
+│   └── index/                     # apix_index_daily.csv (master deduplicated)
+├── docs/
+│   ├── GUIDELINES.md              # Canonical data schema & sampling protocol
+│   ├── SCRAPING_RULES.md          # Engineering rules for all scrapers
+│   └── SIH_26056_*.md             # Strategy document
+├── smart_orchestrator.py          # State-aware runner — skips already-done windows
+├── compute_daily_index.py         # Merges raw CSVs → daily index
+├── schedule_apix.sh               # Thin wrapper → calls smart_orchestrator.py
+└── .github/workflows/
+    └── apix_daily.yml             # Cron: 07:00, 10:00, 18:00, 23:00 IST
+```
+
+---
+
+## Supported Airlines
+
+| Carrier | Code | Scraper Engine | Routes |
+|---|---|---|---|
+| IndiGo | `6E` | SeleniumBase UC | DEL-BOM, DEL-BLR, BOM-BLR, DEL-CCU, BLR-HYD, MAA-DEL |
+| Air India | `AI` / `IX` | SeleniumBase UC | DEL-BOM, DEL-BLR, BOM-BLR, DEL-CCU, BLR-HYD, MAA-DEL |
+| SpiceJet | `SG` | undetected-chromedriver | DEL-BOM, DEL-BLR, BOM-BLR, DEL-CCU, BLR-HYD, MAA-DEL |
+| Akasa Air | `QP` | undetected-chromedriver | DEL-BOM, DEL-BLR, BOM-BLR, DEL-CCU, BLR-HYD, MAA-DEL |
+
+All scrapers collect **5 advance-purchase horizons**: `T+1`, `T+7`, `T+15`, `T+30`, `T+45`.
+
+---
 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/apix.git
-cd apix
+# 1. Clone
+git clone https://github.com/Rishavroy-2006/APIx.git
+cd APIx
 
-# Install the required Python dependencies
-pip install -r requirements.txt
-# OR
-pip install undetected-chromedriver pandas selenium
+# 2. Install dependencies
+pip install undetected-chromedriver seleniumbase selenium pandas beautifulsoup4 lxml
 
-# Run the smart orchestrator to automatically detect and scrape missing data for today
+# 3. Run the orchestrator (auto-detects what's missing for today)
 python3 smart_orchestrator.py
 
-# Manually compute the daily index from raw files
+# 4. Compute the daily index
 python3 compute_daily_index.py
+
+# 5. Or run a targeted single-carrier scrape
+python3 air_india/air_india_scraper.py --windows 1,7
 ```
 
-## Environment Variables
+---
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| None | No | - | The MVP relies strictly on local/GitHub execution and headless browsers without external API keys. |
+## Canonical CSV Schema
+
+All scrapers output **exactly** this 16-column schema (`docs/GUIDELINES.md` is the binding reference):
+
+| Column | Type | Example |
+|---|---|---|
+| `origin` | IATA (3-char) | `DEL` |
+| `destination` | IATA (3-char) | `BOM` |
+| `carrier_code` | 2-char | `6E`, `AI`, `IX`, `SG`, `QP` |
+| `carrier_name` | Fixed lookup | `IndiGo`, `Air India`, … |
+| `flight_num` | String | `6E 2034`, `AI 865` |
+| `travel_date` | YYYY-MM-DD | `2026-09-02` |
+| `advance_purchase_days` | Integer | `1`, `7`, `15`, `30`, `45` |
+| `fare_class` | String | `economy`, `business` |
+| `base_fare` | Float / null | `5800.0` |
+| `taxes_and_fees` | Float / null | `933.0` |
+| `total_fare` | Float / null | `6733.0` |
+| `fare_split_estimated` | Boolean | `false` |
+| `departure_time` | HH:MM | `08:55` |
+| `status` | Enum | `ok`, `sold_out`, `parse_error`, `no_flights_or_timeout` |
+| `scraped_at` | ISO-8601 + TZ | `2026-09-01T07:00:00+05:30` |
+| `capture_run` | String | `2026-09-01_0700IST` |
+
+---
+
+## Sampling Protocol
+
+> *"Lowest available economy fare across all non-stop flights for each route/date, sampled at **07:00 IST** daily."*
+
+- **Fixed snapshot time**: 07:00 IST (not "whenever convenient").
+- **Horizon-first loop**: T+1 collected for **all 6 routes** before moving to T+7 — ensures the most critical near-term data survives even a mid-run crash.
+- **One CSV per run**: `<carrier>_raw_<YYYY-MM-DD>_batch_<windows>_<HHMM>IST.csv` — atomic appends, no split files.
+
+---
 
 ## Core Features
 
-| Feature | Description |
+| Feature | Detail |
 |---|---|
-| **State-Aware Orchestrator** | `smart_orchestrator.py` scans what data is missing for the day and runs exactly what's needed, making the system immune to cron delays or temporary failures. |
-| **Stealth Automation** | Uses `undetected-chromedriver` with randomized delays and precise event bubbling to bypass strict Akamai/Cloudflare bot mitigations. |
-| **Automated Data Pipeline** | Raw CSVs are automatically merged, filtered (removing sold-out flights), and deduplicated daily via `compute_daily_index.py`. |
-| **Standardized Schema** | Parses disparate HTML structures (React Synthetic events for IndiGo, standard DOM for SpiceJet) into a single, unified canonical schema. |
+| **State-Aware Orchestrator** | Scans `apix_data/raw/` to find exactly which T+ windows are missing — never re-scrapes what already exists. |
+| **4-Carrier Coverage** | IndiGo, Air India (incl. Express codeshares), SpiceJet, Akasa Air — all in one pipeline. |
+| **Stealth Automation** | SeleniumBase UC mode + human-like character-by-character typing + random jitter delays bypass Cloudflare / Akamai bot detection. |
+| **Alternate Airport Filter** | Validates IATA codes on every flight card; discards NMI→BOM substitutions and logs to `discarded_routes.log`. |
+| **Resilient Fallback Logging** | Empty SRP or timeout → writes `status=no_flights_or_timeout` row instead of silently failing. |
+| **Unified Schema** | One canonical 16-column schema regardless of airline; documented in `docs/GUIDELINES.md`. |
+| **Engineering Rules** | `docs/SCRAPING_RULES.md` codifies driver lifecycle, synthetic event dispatch, timing protocol, and CSV spec for all scrapers. |
 
-## Live Demo / How to Test
+---
 
-1. Open your terminal in the root directory.
-2. We want to test the smart orchestration system. Run:
-   ```bash
-   python3 smart_orchestrator.py
-   ```
-3. Observe the terminal. If you haven't scraped today, the script will calculate the missing `T+1` to `T+45` windows and automatically launch the scrapers for IndiGo and SpiceJet.
-4. Once completed, run the index compiler:
-   ```bash
-   python3 compute_daily_index.py
-   ```
-5. Check `apix_data/index/apix_index_daily.csv` to see your master deduplicated dataset, perfectly formatted for Pandas consumption!
+## Comparison
 
-## Security & Disclaimers
-
-- **Delay & Failure Resiliency:** Our GitHub Actions pipeline relies on a state-aware Python script rather than bash time-checking, ensuring robust recovery from GitHub runner delays.
-- **Data Persistence:** The scrapers use `append` operations for file writing to ensure transient browser crashes do not destroy historical data.
-- **Ethical Scraping:** The system respects server load by scraping statically defined time horizons once a day per carrier.
-
-## Comparison Table
-
-| Metric | Manual CPI Survey (Legacy) | Private Aggregators | APIx (Our Solution) |
+| Metric | Manual CPI Survey | Private Aggregators | **APIx** |
 |---|---|---|---|
-| **Data Frequency** | Monthly / Weekly | Real-time | Real-time (Daily automated) |
-| **Cost** | High (Human labor) | Extremely High (B2B API access) | Near Zero (Compute cost only) |
-| **Granularity** | Low (Aggregated routes) | Consumer-focused | High (T+1, T+7, T+15, T+30, T+45) |
-| **Govt Compatibility** | Native | Proprietary / Closed Box | Open Schema, DGCA-aligned |
+| **Data Frequency** | Monthly | Real-time | Daily automated (07:00 IST) |
+| **Cost** | High (human labour) | Very high (B2B API) | Near zero (compute only) |
+| **Granularity** | Aggregated routes | Consumer-focused | T+1 → T+45, 6 routes × 4 carriers |
+| **Govt Compatibility** | Native | Proprietary | Open schema, DGCA-aligned |
+
+---
 
 ## Roadmap
 
-**Now**
-- Complete stealth scraping for LCCs (IndiGo, SpiceJet).
-- Build the `smart_orchestrator.py` and `compute_daily_index.py` automated GitHub Actions pipeline.
+**Done ✅**
+- Stealth scraping for all 4 domestic carriers (IndiGo, Air India, SpiceJet, Akasa).
+- `smart_orchestrator.py` with state-aware skip logic and inter-scraper cooldowns.
+- `compute_daily_index.py` automated merge & deduplication pipeline.
+- GitHub Actions cron at 07:00, 10:00, 18:00, 23:00 IST.
+- Canonical schema, `docs/GUIDELINES.md` + `docs/SCRAPING_RULES.md`.
 
 **Next**
-- Integrate OTAs (MakeMyTrip, EaseMyTrip) to capture full-service carrier availability (Air India, Vistara).
-- Implement IQR outlier removal to filter out glitch fares.
+- IQR outlier removal in `compute_daily_index.py` to filter glitch fares.
+- OTA integration (MakeMyTrip / EaseMyTrip) for broader fare coverage.
 
 **Future**
-- Add Laspeyres-style index computation weighted by DGCA route traffic.
-- Create a visual dashboard for MoSPI statisticians to track route heatmaps and inflation curves.
+- Laspeyres-style index computation weighted by DGCA route traffic data.
+- Visual dashboard (route heatmaps + inflation curves) for MoSPI statisticians.
 
-## Tech Stack & License
+---
 
-- Python 3.11+
-- undetected-chromedriver (Bypassing WAFs)
-- Selenium (DOM manipulation and React event simulation)
-- Pandas (Data analysis)
-- GitHub Actions (CI/CD Pipeline)
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Scraping | SeleniumBase (UC mode), undetected-chromedriver |
+| Parsing | BeautifulSoup4, regex |
+| Data | Pandas, CSV (atomic append) |
+| CI/CD | GitHub Actions (4× daily cron) |
+| Language | Python 3.11+ |
 
 ### License
-MIT License. Copyright (c) 2026 APIx Team.
+MIT License. Copyright © 2026 APIx Team.
+
+
+India’s official inflation number treats airfares like it’s still 2005. The current methodology relies on manual price checks a few times a month, despite prices swinging by 300% in a single day and 90% of bookings happening online. **APIx** fixes this. It is a resilient, automated data pipeline that continuously scrapes dynamic fare data from major airlines (IndiGo, SpiceJet), normalizes it, and constructs a statistically rigorous, DGCA-weighted price index. It completely replaces manual surveys with a real-time, automated data feed for the MoSPI and RBI.
