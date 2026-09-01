@@ -139,6 +139,7 @@ def run(target_windows=None):
     
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
     capture_run = now.strftime("%Y-%m-%d_%H%MIST")
+    today = now.date()
     today_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H%MIST")
 
