@@ -147,8 +147,20 @@ way physical CPI collectors visit the same shop at the same time each cycle.
 
 ## 7. Route Basket & Filtering
 
-- The route basket is fixed for the hackathon build (see MVP scope in the
-  strategy doc) — do not silently expand or shrink it in code.
+**Active route basket (6 routes as of SIH submission build):**
+
+| Route | Description |
+|---|---|
+| DEL-BOM | Delhi → Mumbai (highest traffic) |
+| DEL-BLR | Delhi → Bengaluru |
+| BOM-BLR | Mumbai → Bengaluru |
+| DEL-CCU | Delhi → Kolkata |
+| BLR-HYD | Bengaluru → Hyderabad |
+| MAA-DEL | Chennai → Delhi |
+
+DEL-PNQ and BOM-GOI were originally scoped in the strategy document (8-route plan) but were removed from the active build because neither carriers' scrapers nor DGCA weights for those routes were operationalized before the SIH submission deadline. They must not appear in `DGCA_ROUTE_WEIGHTS` or any scraper's `ROUTES` list.
+
+- The route basket is fixed for the hackathon build — do not silently expand or shrink it in code.
 - If a scraped result resolves to an airport code outside the intended
   origin/destination pair (e.g. a secondary/alternate airport), **discard the
   row from the dataset but log it** to a `discarded_routes.log` with a count —
@@ -156,6 +168,7 @@ way physical CPI collectors visit the same shop at the same time each cycle.
   alternate airport (e.g. a new airport opening) is exactly the kind of thing
   that should trigger a basket-definition review later, not disappear
   invisibly.
+
 
 ---
 
