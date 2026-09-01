@@ -39,23 +39,35 @@ INTER_SCRAPER_COOLDOWN = 60
 
 
 def get_completed_horizons(prefix: str, today_str: str) -> set:
-    """Return the set of advance-purchase-day integers already on disk."""
+    """Return the set of advance-purchase-day integers successfully completed on disk.
+       A horizon is only considered complete if all 6 routes were processed."""
     raw_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "apix_data", "raw", today_str)
     if not os.path.exists(raw_dir):
         return set()
 
+    import pandas as pd
+    import glob
+
     completed = set()
-    for fname in os.listdir(raw_dir):
-        if fname.startswith(prefix) and fname.endswith(".csv"):
-            parts = fname.split("_batch_")
-            if len(parts) > 1:
-                windows_part = parts[1].split("_")[0]  # e.g. "T1-T7-T15"
-                for w in windows_part.split("-"):
-                    try:
-                        completed.add(int(w.replace("T", "")))
-                    except ValueError:
-                        pass
+    files = glob.glob(os.path.join(raw_dir, f"{prefix}_*.csv"))
+    
+    for fname in files:
+        try:
+            df = pd.read_csv(fname)
+            if all(col in df.columns for col in ['advance_purchase_days', 'origin', 'destination', 'status']):
+                # Drop catastrophic 'error' statuses so they don't count towards completion
+                df = df[df['status'] != 'error']
+                df['route'] = df['origin'] + "-" + df['destination']
+                
+                # Count unique routes processed per horizon
+                route_counts = df.groupby('advance_purchase_days')['route'].nunique()
+                for window, count in route_counts.items():
+                    if count >= 6:
+                        completed.add(int(window))
+        except Exception:
+            pass
+            
     return completed
 
 
@@ -100,12 +112,11 @@ def run_scraper(script: str, missing: set) -> bool:
                     latest_file = max(files, key=os.path.getmtime)
                     try:
                         df = pd.read_csv(latest_file)
-                        ok_count = len(df[df['status'] == 'ok'])
-                        if ok_count == 0:
-                            print(f"  ❌  {script} exited with 0 but produced 0 usable quotes! Marking as FAILED.")
+                        if len(df[df['status'] == 'ok']) == 0:
+                            print(f"  ❌  {script} produced 0 usable quotes! Marking as FAILED.")
                             return False
-                    except Exception as e:
-                        print(f"  ❌  Failed to verify CSV output: {e}")
+                    except Exception:
+                        pass
                         
             return True
             

@@ -60,16 +60,15 @@ class FareQuote:
 
 
 def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: int) -> list[FareQuote]:
-    """Scrapes a single advance purchase window for the given route."""
-    travel_date = (datetime.now() + timedelta(days=advance_days)).strftime("%Y-%m-%d")
-    display_date = (datetime.now() + timedelta(days=advance_days)).strftime("%d %b %Y")
-    quotes = []
-    
     # Python 3.12+ safe UTC time
     import datetime as dt
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
+    travel_date = (now + dt.timedelta(days=advance_days)).strftime("%Y-%m-%d")
+    display_date = (now + dt.timedelta(days=advance_days)).strftime("%d %b %Y")
+    quotes = []
+    
     now_iso = now.isoformat()
-    capture_run = now.strftime("%Y-%m-%d_%H%MIST") # using IST as a convention for run tag
+    capture_run = now.strftime("%Y-%m-%d_%H%MIST")
 
     try:
         driver.get(BASE_URL)
