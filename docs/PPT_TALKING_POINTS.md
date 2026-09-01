@@ -25,3 +25,15 @@
 ## 5. Handling Reality: "No Flights Available"
 * **The Highlight:** SpiceJet is currently shrinking its fleet and has dropped direct flights on several routes (like DEL -> BLR).
 * **Our Solution:** Our scraper doesn't crash when flights are missing. It intelligently detects "No flights available" messages and logs empty data (`status=no_flights`). This proves our system captures *true market availability*, making the CPI index highly accurate and resilient to real-world business changes.
+
+## 6. The "Fail-Fast" Circuit Breaker
+* **The Problem:** Websites change layout, or internet connections drop. A bot stuck in an error loop wastes critical compute time and risks getting IP-banned.
+* **Our Solution:** We engineered a **Circuit Breaker** pattern. If any scraper encounters 5 consecutive technical exceptions, it immediately aborts via `sys.exit(1)`. Our central `smart_orchestrator.py` catches this, logs the failure, and seamlessly pivots to scraping the next airline without stopping the pipeline.
+
+## 7. Mathematical Integrity (IQR Outlier Filtering)
+* **The Problem:** Airlines sometimes have "glitch fares" (e.g. ₹99,000 for a domestic flight due to a system error), which wildly skews inflation metrics.
+* **Our Solution:** Before computing the index, our statistical engine dynamically groups data by route and horizon and applies the **Interquartile Range (IQR)** algorithm to surgically remove statistical anomalies. This ensures MoSPI / RBI only act on legitimate consumer pricing data.
+
+## 8. DGCA-Weighted Composite Index (Laspeyres-style)
+* **The Problem:** A straight average of all flight prices is economically useless. A ₹500 price hike on the massive DEL-BOM route causes far more inflation than on BOM-GOI.
+* **Our Solution:** We implemented a weighted composite score using actual **DGCA domestic traffic distribution** (e.g., DEL-BOM is weighted at 25%, BOM-BLR at 15%). We compute the daily weighted median, creating a highly accurate, Laspeyres-style Airfare Price Index ready for government macroeconomic policy decisions.
