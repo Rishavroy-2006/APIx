@@ -3,7 +3,12 @@ import glob
 import pandas as pd
 from datetime import datetime, timezone
 
-# Approximate DGCA traffic weights for the 8 core routes
+# DGCA traffic-style estimated weights for the 6 active routes.
+# Sum = 0.90 pre-normalization. The composite calculation at line ~170
+# divides by total_weight (the sum of weights for routes that reported data),
+# which automatically re-normalizes to 1.0 even when routes are missing.
+# These are estimated placeholder values — in production, replace with exact
+# passenger-volume figures from DGCA's official monthly traffic reports.
 DGCA_ROUTE_WEIGHTS = {
     "DEL-BOM": 0.25,
     "DEL-BLR": 0.20,
@@ -11,8 +16,6 @@ DGCA_ROUTE_WEIGHTS = {
     "DEL-CCU": 0.10,
     "BLR-HYD": 0.10,
     "MAA-DEL": 0.10,
-    "DEL-PNQ": 0.05,
-    "BOM-GOI": 0.05
 }
 
 def compute_index(target_date_str=None):
@@ -49,10 +52,8 @@ def compute_index(target_date_str=None):
         
     daily_df = pd.concat(df_list, ignore_index=True)
     
-    # 2. Filter out errors/no_flights
-    initial_len = len(daily_df)
-    daily_df = daily_df[daily_df["status"] == "ok"]
-    print(f"Filtered out {initial_len - len(daily_df)} non-ok records.")
+    # 2. We keep all records (including sold_out/parse_error) to maintain auditability.
+    # We just drop duplicates.
     
     # 3. Deduplicate
     dedup_keys = [
@@ -66,38 +67,64 @@ def compute_index(target_date_str=None):
     
     print(f"After deduplication, {len(daily_df)} unique flight quotes remain for {target_date_str}.")
     
+    # Normalize fare_class to lowercase — scrapers may write 'Economy' or 'economy'
+    # This must happen before any fare_class filter is applied (outlier calc, index math)
+    if 'fare_class' in daily_df.columns:
+        daily_df['fare_class'] = daily_df['fare_class'].str.lower()
+
     if len(daily_df) == 0:
         print("No valid data to index.")
         return
 
-    # 3.1. Statistical Outlier Removal (IQR)
-    print("Applying IQR outlier removal...")
-    pre_outlier_len = len(daily_df)
+    print("Applying IQR & Plausibility outlier removal...")
     
+    # Pre-calculate historical maxes per route
+    historical_maxes = {}
+    if os.path.exists(index_file):
+        try:
+            hist_df = pd.read_csv(index_file)
+            if 'outlier_flag' in hist_df.columns:
+                hist_df = hist_df[hist_df['outlier_flag'] == False]
+            hist_df['route'] = hist_df['origin'] + "-" + hist_df['destination']
+            historical_maxes = hist_df.groupby('route')['total_fare'].max().to_dict()
+        except Exception as e:
+            pass
+            
     def get_lower(x):
-        if len(x) < 4: return -9999999
+        x = x.dropna()
+        if len(x) < 4: return 500
         q1 = x.quantile(0.25)
         q3 = x.quantile(0.75)
-        return q1 - 1.5 * (q3 - q1)
+        return min(q1 - 1.5 * (q3 - q1), 500)
         
     def get_upper(x):
-        if len(x) < 4: return 9999999
+        x = x.dropna()
+        if len(x) < 4: return -1
         q1 = x.quantile(0.25)
         q3 = x.quantile(0.75)
         return q3 + 1.5 * (q3 - q1)
 
-    gb = daily_df.groupby(['origin', 'destination', 'advance_purchase_days'])['total_fare']
-    daily_df['lower_bound'] = gb.transform(get_lower)
-    daily_df['upper_bound'] = gb.transform(get_upper)
+    gb = daily_df[daily_df['status'] == 'ok'].groupby(['origin', 'destination', 'advance_purchase_days'])['total_fare']
+    bounds_df = gb.agg(
+        lower_bound=get_lower,
+        upper_bound=get_upper
+    ).reset_index()
     
-    daily_df = daily_df[(daily_df['total_fare'] >= daily_df['lower_bound']) & (daily_df['total_fare'] <= daily_df['upper_bound'])]
+    bounds_df['route'] = bounds_df['origin'] + "-" + bounds_df['destination']
+    mask = bounds_df['upper_bound'] == -1
+    if mask.any():
+        bounds_df.loc[mask, 'upper_bound'] = bounds_df.loc[mask, 'route'].map(lambda r: historical_maxes.get(r, 20000)) * 10
+    bounds_df = bounds_df.drop(columns=['route'])
+    
+    daily_df = daily_df.merge(bounds_df, on=['origin', 'destination', 'advance_purchase_days'], how='left')
+    
+    daily_df['outlier_flag'] = False
+    out_of_bounds = (daily_df['status'] == 'ok') & ((daily_df['total_fare'] < daily_df['lower_bound']) | (daily_df['total_fare'] > daily_df['upper_bound']))
+    daily_df.loc[out_of_bounds, 'outlier_flag'] = True
     daily_df = daily_df.drop(columns=['lower_bound', 'upper_bound'])
     
-    print(f"Removed {pre_outlier_len - len(daily_df)} glitch/outlier fares via IQR.")
-    
-    if len(daily_df) == 0:
-        print("No valid data to index after outlier removal.")
-        return
+    outlier_count = daily_df['outlier_flag'].sum()
+    print(f"Flagged {outlier_count} glitch/outlier fares via IQR.")
 
     # 4. Merge into master index
     os.makedirs(os.path.dirname(index_file), exist_ok=True)
@@ -126,13 +153,15 @@ def compute_index(target_date_str=None):
 
     # 5. Compute Daily Weighted Composite Index (Laspeyres-style)
     print("Computing Weighted Composite Fare Index...")
-    medians = daily_df.groupby(['origin', 'destination', 'advance_purchase_days'])['total_fare'].median().reset_index()
+    # Exclude unvalidated/incidental carriers (Air India Express) from the core math
+    math_df = daily_df[(daily_df['status'] == 'ok') & (daily_df['outlier_flag'] == False) & (daily_df['carrier_name'] != 'Air India Express')]
+    median_fares = math_df.groupby(['origin', 'destination', 'advance_purchase_days'])['total_fare'].median().reset_index()
     
     composite_rows = []
-    horizons = medians['advance_purchase_days'].unique()
+    horizons = median_fares['advance_purchase_days'].unique()
     
     for h in horizons:
-        h_df = medians[medians['advance_purchase_days'] == h]
+        h_df = median_fares[median_fares['advance_purchase_days'] == h]
         
         weighted_sum = 0
         total_weight = 0

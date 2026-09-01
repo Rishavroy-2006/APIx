@@ -11,11 +11,40 @@ import datetime
 import argparse
 import csv
 import re
+from dataclasses import dataclass, fields, astuple
 
 ROUTES = [("DEL", "BOM"), ("DEL", "BLR"), ("BOM", "BLR"), ("DEL", "CCU"), ("BLR", "HYD"), ("MAA", "DEL")]
 ADVANCE_PURCHASE_WINDOWS = [1, 7, 15, 30, 45]
 
 IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+
+FIELDNAMES = [
+    "origin", "destination", "carrier_code", "carrier_name", "flight_num",
+    "travel_date", "advance_purchase_days", "fare_class", "base_fare",
+    "taxes_and_fees", "total_fare", "fare_split_estimated", "departure_time",
+    "status", "scraped_at", "capture_run"
+]
+
+
+@dataclass
+class FareQuote:
+    """Canonical schema per GUIDELINES.md Section 2. Must match all other scrapers exactly."""
+    origin: str
+    destination: str
+    carrier_code: str           # Fixed lookup: QP = Akasa Air
+    carrier_name: str           # Fixed lookup: never scraped as free text
+    flight_num: str
+    travel_date: str            # YYYY-MM-DD
+    advance_purchase_days: int  # one of {1, 7, 15, 30, 45}
+    fare_class: str             # 'economy' | 'business'
+    base_fare: float | None
+    taxes_and_fees: float | None
+    total_fare: float | None
+    fare_split_estimated: bool  # True if split was estimated, False if directly scraped
+    departure_time: str         # HH:MM 24hr local
+    status: str                 # 'ok' | 'sold_out' | 'parse_error' | 'no_flights'
+    scraped_at: str             # ISO 8601 with +05:30 offset
+    capture_run: str            # e.g. 2026-09-02_0300IST
 
 
 def init_driver():
@@ -41,14 +70,7 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
     capture_run = now_ist.strftime("%Y-%m-%d_%H%MIST")
     search_date_str = target_date.strftime("%Y-%m-%d")
 
-    fieldnames = [
-        "origin", "destination", "carrier_code", "carrier_name", "flight_num",
-        "travel_date", "advance_purchase_days", "fare_class", "base_fare",
-        "taxes_and_fees", "total_fare", "fare_split_estimated", "departure_time",
-        "status", "scraped_at", "capture_run"
-    ]
-
-    rows = []
+    quotes: list[FareQuote] = []
     driver = init_driver()
     try:
         wait = WebDriverWait(driver, 15)
@@ -163,47 +185,69 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
                     continue  # Skip connecting flights
 
                 price = int(price_str.replace(",", ""))
-                rows.append({
-                    "origin": origin,
-                    "destination": dest,
-                    "carrier_code": "QP",
-                    "carrier_name": "Akasa Air",
-                    "flight_num": flight_num.replace(" ", ""),
-                    "travel_date": search_date_str,
-                    "advance_purchase_days": days_ahead,
-                    "fare_class": "economy",
-                    "base_fare": "",
-                    "taxes_and_fees": "",
-                    "total_fare": price,
-                    "fare_split_estimated": "false",
-                    "departure_time": dep_time,
-                    "status": "ok",
-                    "scraped_at": now_iso,
-                    "capture_run": capture_run,
-                })
+                # Akasa only shows total fare on search results page — base/tax split not available
+                # fare_split_estimated=False because we are NOT estimating a split; we simply have no split.
+                # base_fare and taxes_and_fees are None per GUIDELINES.md Section 2.
+                quote = FareQuote(
+                    origin=origin,
+                    destination=dest,
+                    carrier_code="QP",
+                    carrier_name="Akasa Air",
+                    flight_num=flight_num.replace(" ", ""),
+                    travel_date=search_date_str,
+                    advance_purchase_days=days_ahead,
+                    fare_class="economy",
+                    base_fare=None,
+                    taxes_and_fees=None,
+                    total_fare=float(price),
+                    fare_split_estimated=False,  # No split attempted — not estimated, just unavailable
+                    departure_time=dep_time,
+                    status="ok",
+                    scraped_at=now_iso,
+                    capture_run=capture_run,
+                )
+                quotes.append(quote)
 
-        if not rows:
-            rows.append({
-                "origin": origin, "destination": dest, "carrier_code": "QP",
-                "carrier_name": "Akasa Air", "flight_num": "unknown",
-                "travel_date": search_date_str, "advance_purchase_days": days_ahead,
-                "fare_class": "economy", "base_fare": "", "taxes_and_fees": "",
-                "total_fare": "", "fare_split_estimated": "false",
-                "departure_time": "unknown", "status": "no_flights_or_timeout",
-                "scraped_at": now_iso, "capture_run": capture_run,
-            })
+        if not quotes:
+            quotes.append(FareQuote(
+                origin=origin,
+                destination=dest,
+                carrier_code="QP",
+                carrier_name="Akasa Air",
+                flight_num="unknown",
+                travel_date=search_date_str,
+                advance_purchase_days=days_ahead,
+                fare_class="economy",
+                base_fare=None,
+                taxes_and_fees=None,
+                total_fare=None,
+                fare_split_estimated=False,
+                departure_time="unknown",
+                status="no_flights_or_timeout",
+                scraped_at=now_iso,
+                capture_run=capture_run,
+            ))
 
     except Exception as e:
         print(f"  [{origin}->{dest}] Error: {e}")
-        rows.append({
-            "origin": origin, "destination": dest, "carrier_code": "QP",
-            "carrier_name": "Akasa Air", "flight_num": "error",
-            "travel_date": search_date_str, "advance_purchase_days": days_ahead,
-            "fare_class": "economy", "base_fare": "", "taxes_and_fees": "",
-            "total_fare": "", "fare_split_estimated": "false",
-            "departure_time": "unknown", "status": "error",
-            "scraped_at": now_iso, "capture_run": capture_run,
-        })
+        quotes.append(FareQuote(
+            origin=origin,
+            destination=dest,
+            carrier_code="QP",
+            carrier_name="Akasa Air",
+            flight_num="error",
+            travel_date=search_date_str,
+            advance_purchase_days=days_ahead,
+            fare_class="economy",
+            base_fare=None,
+            taxes_and_fees=None,
+            total_fare=None,
+            fare_split_estimated=False,
+            departure_time="unknown",
+            status="error",
+            scraped_at=now_iso,
+            capture_run=capture_run,
+        ))
         has_error = True
     else:
         has_error = False
@@ -213,12 +257,32 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
     # Atomic append to CSV per Rule 1c
     file_exists = os.path.exists(csv_path)
     with open(csv_path, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         if not file_exists:
             writer.writeheader()
-        writer.writerows(rows)
+        for q in quotes:
+            row = {
+                "origin": q.origin,
+                "destination": q.destination,
+                "carrier_code": q.carrier_code,
+                "carrier_name": q.carrier_name,
+                "flight_num": q.flight_num,
+                "travel_date": q.travel_date,
+                "advance_purchase_days": q.advance_purchase_days,
+                "fare_class": q.fare_class,
+                "base_fare": q.base_fare if q.base_fare is not None else "",
+                "taxes_and_fees": q.taxes_and_fees if q.taxes_and_fees is not None else "",
+                "total_fare": q.total_fare if q.total_fare is not None else "",
+                "fare_split_estimated": q.fare_split_estimated,  # Python bool → True/False in CSV
+                "departure_time": q.departure_time,
+                "status": q.status,
+                "scraped_at": q.scraped_at,
+                "capture_run": q.capture_run,
+            }
+            writer.writerow(row)
 
-    return len([r for r in rows if r["status"] == "ok"]), has_error
+    usable = len([q for q in quotes if q.status == "ok"])
+    return usable, has_error
 
 
 def main():
@@ -260,7 +324,7 @@ def main():
             print(f"\n--- Scraping T+{days_ahead} ({origin} -> {dest}) ---")
             usable, has_error = scrape_akasa(origin, dest, target_date, days_ahead, csv_path)
             print(f"  -> {usable} usable quote(s) appended.")
-            
+
             if has_error:
                 consecutive_errors += 1
                 if consecutive_errors >= 5:

@@ -91,7 +91,7 @@ def parse_page_flights(page_text: str, origin: str, dest: str, date_str: str, ad
                             fares_found.append(f_float)
             
             if fares_found:
-                tier_labels = ["economy", "economy", "business"]
+                tier_labels = ["economy", "economy", "economy"]  # SpiceJet search page only shows economy fares; label all as economy
                 for t_idx, fare_amt in enumerate(fares_found[:3]):
                     quotes.append(FareQuote(
                         origin=origin,
