@@ -1,0 +1,9 @@
+origin,destination,carrier_code,carrier_name,flight_num,travel_date,advance_purchase_days,fare_class,base_fare,taxes_and_fees,total_fare,fare_split_estimated,departure_time,status,scraped_at,capture_run
+DEL,BOM,QP,Akasa Air,QP1833,2026-09-02,1,economy,,,6530,false,06:50,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
+DEL,BOM,QP,Akasa Air,QP1119,2026-09-02,1,economy,,,6530,false,08:40,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
+DEL,BOM,QP,Akasa Air,QP1112,2026-09-02,1,economy,,,6530,false,09:20,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
+DEL,BOM,QP,Akasa Air,QP1110,2026-09-02,1,economy,,,6530,false,10:30,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
+DEL,BOM,QP,Akasa Air,QP1836,2026-09-02,1,economy,,,6530,false,12:30,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
+DEL,BOM,QP,Akasa Air,QP1128,2026-09-02,1,economy,,,6530,false,16:00,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
+DEL,BOM,QP,Akasa Air,QP1820,2026-09-02,1,economy,,,6530,false,17:30,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
+DEL,BOM,QP,Akasa Air,QP1826,2026-09-02,1,economy,,,6649,false,19:55,ok,2026-09-01T14:08:27.495321+05:30,2026-09-01_1408IST
