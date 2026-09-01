@@ -5,112 +5,142 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 import time
+import random
 import os
 import datetime
 import argparse
 import csv
 import re
 
-ROUTES = ["DEL-BOM", "BOM-BLR", "BLR-DEL", "DEL-BLR", "DEL-CCU", "CCU-DEL"]
+ROUTES = [("DEL", "BOM"), ("DEL", "BLR"), ("BOM", "BLR"), ("DEL", "CCU"), ("BLR", "HYD"), ("MAA", "DEL")]
+ADVANCE_PURCHASE_WINDOWS = [1, 7, 15, 30, 45]
+
+IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+
 
 def init_driver():
+    """Fresh undetected-chromedriver instance, windowed (no headless)."""
     options = uc.ChromeOptions()
     options.add_argument("--window-size=1920,1080")
-    options.add_argument('--headless')
-    driver = uc.Chrome(options=options)
+    # NOTE: No --headless flag per SCRAPING_RULES Section 2 (headful windowed required)
+    driver = uc.Chrome(options=options, version_main=151)
     return driver
 
-def scrape_akasa(driver, origin, dest, target_date, days_ahead, writer):
-    wait = WebDriverWait(driver, 15)
-    url = "https://www.akasaair.com/"
-    print(f"Navigating to {url} for {origin}-{dest} (T+{days_ahead})")
-    
+
+def human_type(element, text: str):
+    """Type character-by-character with jitter (Rule 3)."""
+    for char in text:
+        element.send_keys(char)
+        time.sleep(random.uniform(0.10, 0.25))
+
+
+def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead: int, csv_path: str):
+    """Fresh driver per route, with try-finally quit (Rule 2)."""
+    now_ist = datetime.datetime.now(IST)
+    now_iso = now_ist.isoformat()  # includes +05:30 offset per Rule 6b
+    capture_run = now_ist.strftime("%Y-%m-%d_%H%MIST")
+    search_date_str = target_date.strftime("%Y-%m-%d")
+
+    fieldnames = [
+        "origin", "destination", "carrier_code", "carrier_name", "flight_num",
+        "travel_date", "advance_purchase_days", "fare_class", "base_fare",
+        "taxes_and_fees", "total_fare", "fare_split_estimated", "departure_time",
+        "status", "scraped_at", "capture_run"
+    ]
+
+    rows = []
+    driver = init_driver()
     try:
+        wait = WebDriverWait(driver, 15)
+        url = "https://www.akasaair.com/"
+        print(f"  [{origin}->{dest}] Navigating to Akasa...")
         driver.get(url)
-        time.sleep(3)
-        
-        # 1. Click From
-        print(f"Selecting {origin}...")
+        time.sleep(random.uniform(2.5, 4.0))
+
+        # 1. From field
+        print(f"  [{origin}->{dest}] Entering Origin ({origin})...")
         from_input = wait.until(EC.element_to_be_clickable((By.ID, "From")))
         from_input.click()
-        time.sleep(2)
-        from_input.send_keys(Keys.COMMAND + "a")
+        time.sleep(random.uniform(0.8, 1.4))
+        from_input.send_keys(Keys.CONTROL + "a")
         from_input.send_keys(Keys.BACKSPACE)
-        from_input.send_keys(origin)
-        time.sleep(3)
-        from_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[contains(text(), '{origin}')] | //p[contains(text(), '{origin}')] | //span[contains(text(), '{origin}')]")))
+        human_type(from_input, origin)
+        time.sleep(random.uniform(1.5, 2.5))
+        from_option = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, f"//div[contains(text(), '{origin}')] | //p[contains(text(), '{origin}')] | //span[contains(text(), '{origin}')]")
+        ))
         from_option.click()
-        time.sleep(2)
-        
-        # 2. Click To
-        print(f"Selecting {dest}...")
+        time.sleep(random.uniform(0.8, 1.4))
+
+        # 2. To field
+        print(f"  [{origin}->{dest}] Entering Destination ({dest})...")
         to_input = wait.until(EC.element_to_be_clickable((By.ID, "To")))
         to_input.click()
-        time.sleep(2)
-        to_input.send_keys(Keys.COMMAND + "a")
+        time.sleep(random.uniform(0.8, 1.4))
+        to_input.send_keys(Keys.CONTROL + "a")
         to_input.send_keys(Keys.BACKSPACE)
-        to_input.send_keys(dest)
-        time.sleep(3)
-        to_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[contains(text(), '{dest}')] | //p[contains(text(), '{dest}')] | //span[contains(text(), '{dest}')]")))
+        human_type(to_input, dest)
+        time.sleep(random.uniform(1.5, 2.5))
+        to_option = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, f"//div[contains(text(), '{dest}')] | //p[contains(text(), '{dest}')] | //span[contains(text(), '{dest}')]")
+        ))
         to_option.click()
-        time.sleep(2)
-        
-        # 3. Handle Date via Formatting and Typing
+        time.sleep(random.uniform(0.8, 1.4))
+
+        # 3. Date
         target_label = target_date.strftime("%a, %d %b %Y")
-        print(f"Typing date: {target_label}...")
-        
+        print(f"  [{origin}->{dest}] Entering Date ({target_label})...")
         date_input = driver.find_element(By.NAME, "DepartureDate")
         date_input.click()
         time.sleep(1)
-        
-        date_input.send_keys(Keys.COMMAND + "a")
+        date_input.send_keys(Keys.CONTROL + "a")
         time.sleep(0.5)
-        date_input.send_keys(Keys.BACKSPACE)
         for _ in range(30):
             date_input.send_keys(Keys.BACKSPACE)
             date_input.send_keys(Keys.DELETE)
-        time.sleep(1)
-        
+        time.sleep(0.5)
         date_input.send_keys(target_label)
         time.sleep(1)
         date_input.send_keys(Keys.ENTER)
-        time.sleep(1)
-        
-        # 4. Click Search Flights
-        print("Waiting for Search Flights to be enabled...")
-        search_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Search Flights')]")))
+        time.sleep(random.uniform(0.8, 1.4))
+
+        # 4. Search
+        print(f"  [{origin}->{dest}] Clicking Search Flights...")
+        search_btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(text(), 'Search Flights')]")
+        ))
         search_btn.click()
-        
-        print("Waiting 30s for flight results to load...")
+        print(f"  [{origin}->{dest}] Waiting 30s for results...")
         time.sleep(30)
-        
-        # 5. Parse Results
-        print("Parsing DOM...")
+
+        # 5. Parse
+        print(f"  [{origin}->{dest}] Parsing DOM...")
         soup = BeautifulSoup(driver.page_source, "html.parser")
         flight_nodes = []
         for el in soup.find_all("div", class_=lambda c: c and "w-full" in c and "flex" in c):
             text = el.text.strip()
             if re.search(r"QP\d{4}", text) and re.search(r"\d{2}:\d{2}", text) and re.search(r"₹[\d,]+", text):
                 flight_nodes.append(el)
-        
-        print(f"Found {len(flight_nodes)} flight cards")
-        
+
+        print(f"  [{origin}->{dest}] Found {len(flight_nodes)} flight card(s).")
+
         for node in flight_nodes:
             text = node.text.strip()
             match = re.search(r"(QP\d+).*?(\d{2}:\d{2})([A-Z]{3}).*?(\d{2}:\d{2})([A-Z]{3}).*?₹([\d,]+)", text)
             if match:
                 flight_num, dep_time, dep_city, arr_time, arr_city, price_str = match.groups()
-                price = int(price_str.replace(",", ""))
-                
-                # Check if it's Non-stop
+
+                # Rule 4a: Alternate airport validation
+                if dep_city != origin or arr_city != dest:
+                    with open("discarded_routes.log", "a") as lf:
+                        lf.write(f"[{now_iso}] QP: Discarded {dep_city}->{arr_city} (Target: {origin}->{dest}) flight={flight_num}\n")
+                    continue
+
                 if "Non-stop" not in text:
-                    continue # Skip connecting flights
-                
-                now_ist = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
-                scraped_at = now_ist.strftime("%Y-%m-%dT%H:%M:%S")
-                search_date_str = target_date.strftime("%Y-%m-%d")
-                
-                writer.writerow({
+                    continue  # Skip connecting flights
+
+                price = int(price_str.replace(",", ""))
+                rows.append({
                     "origin": origin,
                     "destination": dest,
                     "carrier_code": "QP",
@@ -125,64 +155,91 @@ def scrape_akasa(driver, origin, dest, target_date, days_ahead, writer):
                     "fare_split_estimated": "false",
                     "departure_time": dep_time,
                     "status": "ok",
-                    "scraped_at": scraped_at,
-                    "capture_run": f"{now_ist.strftime('%Y-%m-%d_%H%MIST')}"
+                    "scraped_at": now_iso,
+                    "capture_run": capture_run,
                 })
-        print("Saved flights for route.")
+
+        if not rows:
+            rows.append({
+                "origin": origin, "destination": dest, "carrier_code": "QP",
+                "carrier_name": "Akasa Air", "flight_num": "unknown",
+                "travel_date": search_date_str, "advance_purchase_days": days_ahead,
+                "fare_class": "economy", "base_fare": "", "taxes_and_fees": "",
+                "total_fare": "", "fare_split_estimated": "false",
+                "departure_time": "unknown", "status": "no_flights_or_timeout",
+                "scraped_at": now_iso, "capture_run": capture_run,
+            })
 
     except Exception as e:
-        print(f"Error scraping {origin}-{dest}: {e}")
+        print(f"  [{origin}->{dest}] Error: {e}")
+        rows.append({
+            "origin": origin, "destination": dest, "carrier_code": "QP",
+            "carrier_name": "Akasa Air", "flight_num": "error",
+            "travel_date": search_date_str, "advance_purchase_days": days_ahead,
+            "fare_class": "economy", "base_fare": "", "taxes_and_fees": "",
+            "total_fare": "", "fare_split_estimated": "false",
+            "departure_time": "unknown", "status": "error",
+            "scraped_at": now_iso, "capture_run": capture_run,
+        })
+    finally:
+        driver.quit()  # CRITICAL: guaranteed per Rule 2b
 
-def main():
-    parser = argparse.ArgumentParser(description="Scrape Akasa Air prices.")
-    parser.add_argument("--windows", type=str, default="T+1,T+7,T+15,T+30,T+45", help="Comma-separated list of windows, e.g., T+1,T+7")
-    parser.add_argument("--routes", type=str, default="DEL-BOM,BOM-BLR,BLR-DEL,DEL-BLR,DEL-CCU,CCU-DEL", help="Comma-separated list of routes")
-    args = parser.parse_args()
-    
-    windows = [w.strip() for w in args.windows.split(",") if w.strip()]
-    routes_to_run = [r.strip() for r in args.routes.split(",") if r.strip()]
-    
-    now_ist = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
-    today = now_ist.date()
-    today_str = today.strftime("%Y-%m-%d")
-    time_str = now_ist.strftime("%H%MIST")
-    
-    out_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "apix_data", "raw", today_str)
-    os.makedirs(out_dir, exist_ok=True)
-    
-    windows_str = "-".join([f"T{w.replace('T+', '')}" for w in windows])
-    out_file = os.path.join(out_dir, f"akasa_raw_{today_str}_batch_{windows_str}_{time_str}.csv")
-    file_exists = os.path.exists(out_file)
-    
-    with open(out_file, "a", newline="", encoding="utf-8") as f:
-        fieldnames = [
-            "origin", "destination", "carrier_code", "carrier_name", "flight_num",
-            "travel_date", "advance_purchase_days", "fare_class", "base_fare",
-            "taxes_and_fees", "total_fare", "fare_split_estimated", "departure_time",
-            "status", "scraped_at", "capture_run"
-        ]
+    # Atomic append to CSV per Rule 1c
+    file_exists = os.path.exists(csv_path)
+    with open(csv_path, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if not file_exists:
             writer.writeheader()
-            
-        driver = init_driver()
-        try:
-            for window in windows:
-                days_ahead = int(window.replace("T+", ""))
-                target_date = today + datetime.timedelta(days=days_ahead)
-                
-                for route in routes_to_run:
-                    try:
-                        origin, dest = route.split("-")
-                    except:
-                        continue
-                    
-                    scrape_akasa(driver, origin, dest, target_date, days_ahead, writer)
-                    f.flush()
-                    print(f"Waiting before next request...")
-                    time.sleep(5)
-        finally:
-            driver.quit()
+        writer.writerows(rows)
+
+    return len([r for r in rows if r["status"] == "ok"])
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Akasa Air Scraper")
+    parser.add_argument("--windows", type=str, default="1,7,15,30,45",
+                        help="Comma-separated advance days, e.g. 1,7")
+    parser.add_argument("--routes", type=str,
+                        default="DEL-BOM,DEL-BLR,BOM-BLR,DEL-CCU,BLR-HYD,MAA-DEL",
+                        help="Comma-separated routes e.g. DEL-BOM,DEL-BLR")
+    args = parser.parse_args()
+
+    # Support both T+1 format and plain int
+    raw_windows = [w.strip().replace("T+", "") for w in args.windows.split(",") if w.strip()]
+    windows_to_scrape = [int(w) for w in raw_windows]
+    routes_to_run = [(r.split("-")[0], r.split("-")[1]) for r in args.routes.split(",") if "-" in r]
+
+    now_ist = datetime.datetime.now(IST)
+    today = now_ist.date()
+    today_str = today.strftime("%Y-%m-%d")
+    time_str = now_ist.strftime("%H%MIST")
+
+    out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "apix_data", "raw", today_str)
+    os.makedirs(out_dir, exist_ok=True)
+
+    windows_str = "-".join([f"T{w}" for w in windows_to_scrape])
+    csv_path = os.path.join(out_dir, f"akasa_raw_{today_str}_batch_{windows_str}_{time_str}.csv")
+    print(f"Target CSV: {csv_path}")
+
+    # Rule 1a: Horizons outer, routes inner
+    for days_ahead in windows_to_scrape:
+        print(f"\n{'='*60}")
+        print(f"  AKASA HORIZON: T+{days_ahead}")
+        print(f"{'='*60}")
+        target_date = today + datetime.timedelta(days=days_ahead)
+
+        for origin, dest in routes_to_run:
+            print(f"\n--- Scraping T+{days_ahead} ({origin} -> {dest}) ---")
+            usable = scrape_akasa(origin, dest, target_date, days_ahead, csv_path)
+            print(f"  -> {usable} usable quote(s) appended.")
+
+            # Rule 6a: Inter-route jitter 30-45s
+            delay = random.uniform(30.0, 45.0)
+            print(f"  Waiting {delay:.1f}s before next request...")
+            time.sleep(delay)
+
+    print("\nAkasa scraping completed successfully!")
+
 
 if __name__ == "__main__":
     main()

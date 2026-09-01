@@ -166,7 +166,9 @@ def run(target_windows=None):
             
             print("Starting fresh undetected-chromedriver session...")
             driver = init_driver(headless=False)
-            now_iso = dt.datetime.now(dt.timezone.utc).isoformat()
+            # Rule 6b: IST-aware timestamp with +05:30 offset
+            now_ist = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
+            now_iso = now_ist.isoformat()  # e.g. 2026-09-01T05:30:00+05:30
             
             url = f"https://www.spicejet.com/search?from={origin}&to={dest}&tripType=1&departure={date_str}&adult=1&child=0&srCitizen=0&infant=0&currency=INR&redirectTo=/&airline=SG"
             

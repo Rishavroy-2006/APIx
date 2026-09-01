@@ -2,17 +2,17 @@ name: APIx Daily Scrapers
 
 on:
   schedule:
-    # GitHub Cron runs in UTC. 
+    # GitHub Cron runs in UTC.
     # 01:30 UTC = 07:00 AM IST (Primary Morning Run)
     - cron: '30 1 * * *'
     # 04:30 UTC = 10:00 AM IST (Fallback Run 3 hours later)
     - cron: '30 4 * * *'
-    
+
     # 12:30 UTC = 06:00 PM IST (Primary Evening Run)
     - cron: '30 12 * * *'
     # 17:30 UTC = 11:00 PM IST (End of day catch-up)
     - cron: '30 17 * * *'
-  
+
   # Allows you to trigger this workflow manually from the GitHub Actions tab
   workflow_dispatch:
 
@@ -39,7 +39,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install undetected-chromedriver pandas selenium
+          pip install \
+            undetected-chromedriver \
+            seleniumbase \
+            selenium \
+            pandas \
+            beautifulsoup4 \
+            lxml
 
       - name: Install Xvfb (Virtual Display)
         run: |
@@ -62,12 +68,13 @@ jobs:
         run: |
           git config --global user.name "APIx Github Bot"
           git config --global user.email "bot@apix.local"
-          
-          # Add the new folders/files created in apix_data/
+
+          # Add all outputs: raw CSVs, index, and airport filter log
           git add apix_data/raw/
           git add apix_data/index/
           git add compute_daily_index.py
-          
+          git add discarded_routes.log || true   # may not exist if no alternates were seen
+
           # Commit only if there are changes
           git diff --quiet && git diff --staged --quiet || git commit -m "Automated CPI Scrape & Index: $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push

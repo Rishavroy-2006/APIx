@@ -1,51 +1,38 @@
 #!/bin/bash
 
 # APIx Automated Scheduler Wrapper
-# This script wraps the IndiGo and SpiceJet scrapers to ensure they 
-# run sequentially (not in parallel) to prevent IP rate-limiting or
-# system memory exhaustion (since Chrome is memory-heavy).
+# Delegates to smart_orchestrator.py which handles all 4 carriers
+# (IndiGo, Air India, SpiceJet, Akasa) with state-aware skip logic,
+# inter-scraper cooldowns, and a final summary.
+#
+# Usage:
+#   ./schedule_apix.sh              — full run, all 5 horizons (T+1..T+45)
+#   ./schedule_apix.sh 1,7          — targeted run for specific windows only
+#
+# The orchestrator itself skips any windows already present in apix_data/
+# so it is safe to re-run this script as a cron retry.
 
-# Get the directory where this script is located
+set -euo pipefail
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-# Ensure we have arguments
-if [ -z "$1" ]; then
-    echo "Usage: ./schedule_apix.sh [windows]"
-    echo "Example: ./schedule_apix.sh 1,7"
-    exit 1
-fi
-
-WINDOWS=$1
-
 echo "====================================================="
-echo " Starting APIx Scrape Run for Horizons: T+$WINDOWS"
-echo " Time: $(date)"
+echo " APIx Scrape Run"
+echo " Time: $(date '+%Y-%m-%d %H:%M %Z')"
 echo "====================================================="
 
-# 1. Run IndiGo Scraper
-echo "[1/2] Launching IndiGo Scraper for T+$WINDOWS..."
-python3 indigo/indigo_scraper_uc.py --windows "$WINDOWS"
-if [ $? -ne 0 ]; then
-    echo "❌ IndiGo scraper encountered an error."
+python3 smart_orchestrator.py
+
+EXIT_CODE=$?
+
+echo "====================================================="
+if [ $EXIT_CODE -eq 0 ]; then
+    echo " ✅  Orchestrator completed successfully."
 else
-    echo "✅ IndiGo scraper completed."
+    echo " ❌  Orchestrator exited with code $EXIT_CODE."
 fi
-
-# 2. Add a cooling off period between airlines just to be safe
-echo "Cooling off for 60 seconds before launching SpiceJet..."
-sleep 60
-
-# 3. Run SpiceJet Scraper
-echo "[2/2] Launching SpiceJet Scraper for T+$WINDOWS..."
-python3 spicejet/spicejet_scraper.py --windows "$WINDOWS"
-if [ $? -ne 0 ]; then
-    echo "❌ SpiceJet scraper encountered an error."
-else
-    echo "✅ SpiceJet scraper completed."
-fi
-
+echo " Time: $(date '+%Y-%m-%d %H:%M %Z')"
 echo "====================================================="
-echo " APIx Scrape Run Complete!"
-echo " Time: $(date)"
-echo "====================================================="
+
+exit $EXIT_CODE
