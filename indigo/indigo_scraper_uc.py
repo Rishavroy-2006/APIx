@@ -139,7 +139,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
             print(f"Timeout waiting for results on T+{advance_days}")
             quotes.append(FareQuote(
                 origin_code, dest_code, "6E", "IndiGo", "unknown", travel_date, advance_days,
-                "unknown", None, None, None, False, "unknown", "no_flights_or_timeout", now_iso, capture_run
+                "unknown", None, None, None, False, "unknown", "error", now_iso, capture_run
             ))
             return quotes
 
@@ -240,6 +240,22 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                             departure_time=dep_time, status="ok", scraped_at=now_iso, capture_run=capture_run
                         ))
                 
+                if not fares_found:
+                    # Fallback for accordion layout where chips are hidden until clicked
+                    fallback_prices = card.find_elements(By.CSS_SELECTOR, SELECTORS["fare_card_price"])
+                    if fallback_prices:
+                        p_text = fallback_prices[0].text.strip()
+                        num_str = "".join(ch for ch in p_text if ch.isdigit() or ch == ".")
+                        if num_str:
+                            quotes.append(FareQuote(
+                                origin=act_origin, destination=act_dest,
+                                carrier_code=carrier_code, carrier_name=carrier_name,
+                                flight_num=flight_num, travel_date=travel_date, advance_purchase_days=advance_days,
+                                fare_class="economy", base_fare=None, taxes_and_fees=None, total_fare=float(num_str), fare_split_estimated=False,
+                                departure_time=dep_time, status="ok", scraped_at=now_iso, capture_run=capture_run
+                            ))
+                            fares_found = True
+
                 if not fares_found:
                     quotes.append(FareQuote(
                         origin=act_origin, destination=act_dest,

@@ -86,22 +86,21 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
             cookie_btn = driver.find_elements(By.XPATH, "//button[contains(., 'Accept') or contains(., 'Agree')]")
             if cookie_btn:
                 driver.execute_script("arguments[0].click();", cookie_btn[0])
-                time.sleep(1)
+            
+            # Look for general promotional modals/close buttons
+            close_btns = driver.find_elements(By.CSS_SELECTOR, "img[alt='close'], img[alt='Close'], button.close, .close-icon, [aria-label='Close']")
+            for btn in close_btns:
+                if btn.is_displayed():
+                    driver.execute_script("arguments[0].click();", btn)
         except Exception:
             pass
 
         from_input = wait.until(EC.presence_of_element_located((By.ID, "From")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", from_input)
-        time.sleep(0.5)
-        try:
-            from_input.click()
-        except Exception:
-            driver.execute_script("arguments[0].click();", from_input)
-
-        time.sleep(random.uniform(0.8, 1.4))
-        from_input.send_keys(Keys.CONTROL + "a")
-        from_input.send_keys(Keys.BACKSPACE)
-        driver.execute_script("arguments[0].value = '';", from_input)
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", from_input)
+        time.sleep(1)
+        
+        # Aggressive clear and focus via JS
+        driver.execute_script("arguments[0].value = ''; arguments[0].focus(); arguments[0].click();", from_input)
         human_type(from_input, origin)
         time.sleep(random.uniform(1.5, 2.5))
         from_option = wait.until(EC.element_to_be_clickable(

@@ -139,8 +139,7 @@ def run(target_windows=None):
     
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
     capture_run = now.strftime("%Y-%m-%d_%H%MIST")
-    today = dt.date.today()
-    today_str = today.strftime("%Y-%m-%d")
+    today_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H%MIST")
 
     windows_to_scrape = target_windows if target_windows else ADVANCE_PURCHASE_WINDOWS

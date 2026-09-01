@@ -277,14 +277,15 @@ def run(target_windows=None):
     print(f"Starting SeleniumBase UC session for Air India scraping...")
     print(f"Target CSV: {csv_path}")
     
-    with SB(uc=True) as sb:
-        consecutive_errors = 0
-        # Outer loop: Advance Purchase Horizons (Resilience Rule: T+1 first, T+7, etc.)
-        for advance_days in windows_to_scrape:
-            print(f"\n{'='*60}")
-            print(f"  AIR INDIA HORIZON: T+{advance_days}")
-            print(f"{'='*60}")
+    consecutive_errors = 0
+    # Outer loop: Advance Purchase Horizons (Resilience Rule: T+1 first, T+7, etc.)
+    for advance_days in windows_to_scrape:
+        print(f"\n{'='*60}")
+        print(f"  AIR INDIA HORIZON: T+{advance_days}")
+        print(f"{'='*60}")
 
+        # Instantiate fresh browser for each horizon to prevent session degradation/blocking
+        with SB(uc=True) as sb:
             # Inner loop: Routes
             for idx, (origin, dest) in enumerate(ROUTES):
                 print(f"\n--- Scraping T+{advance_days} ({origin} -> {dest}) ---")
