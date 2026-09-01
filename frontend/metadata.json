@@ -1,0 +1,6 @@
+{
+  "name": "APIx — Real-time Airfare Price Index",
+  "description": "SIH Problem Statement 26056 for MoSPI. Real-time airfare dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
