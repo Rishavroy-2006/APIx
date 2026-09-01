@@ -263,6 +263,13 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
 
     except Exception as e:
         print(f"[ERROR] T+{advance_days}:", e)
+        quotes.append(FareQuote(
+            origin=origin_code, destination=dest_code,
+            carrier_code="6E", carrier_name="IndiGo",
+            flight_num="error", travel_date=travel_date, advance_purchase_days=advance_days,
+            fare_class="unknown", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
+            departure_time="unknown", status="error", scraped_at=now_iso, capture_run=capture_run
+        ))
 
     return quotes
 
@@ -297,6 +304,7 @@ def run(target_windows=None):
     csv_filename = f"indigo_raw_{today_str}_batch_{windows_str}_{time_str}.csv"
     csv_path = os.path.join(data_dir, csv_filename)
     
+    consecutive_errors = 0
     for advance_days in windows_to_scrape:
         print(f"\n{'='*60}")
         print(f"  HORIZON: T+{advance_days}")
@@ -311,12 +319,29 @@ def run(target_windows=None):
             
             try:
                 quotes = scrape_one_window(driver, origin, dest, advance_days)
+                has_error = any(q.status in ['error', 'scrape_error'] for q in quotes)
                 usable = sum(1 for q in quotes if q.status == 'ok')
                 print(f"  -> {len(quotes)} quote(s) captured ({usable} usable)")
                 
                 append_csv(quotes, csv_path)
                 print(f"  -> Appended to {csv_path}")
                 
+                if has_error:
+                    consecutive_errors += 1
+                    if consecutive_errors >= 5:
+                        print("\n[CRITICAL] 5 consecutive technical failures detected! Triggering circuit breaker.")
+                        import sys
+                        sys.exit(1)
+                else:
+                    consecutive_errors = 0
+                    
+            except Exception as e:
+                print(f"Critical error on {origin}->{dest}: {e}")
+                consecutive_errors += 1
+                if consecutive_errors >= 5:
+                    print("\n[CRITICAL] 5 consecutive technical failures detected! Triggering circuit breaker.")
+                    import sys
+                    sys.exit(1)
             finally:
                 driver.quit()
                 

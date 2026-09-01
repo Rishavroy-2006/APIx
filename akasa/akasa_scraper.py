@@ -204,6 +204,9 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
             "departure_time": "unknown", "status": "error",
             "scraped_at": now_iso, "capture_run": capture_run,
         })
+        has_error = True
+    else:
+        has_error = False
     finally:
         driver.quit()  # CRITICAL: guaranteed per Rule 2b
 
@@ -215,7 +218,7 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
             writer.writeheader()
         writer.writerows(rows)
 
-    return len([r for r in rows if r["status"] == "ok"])
+    return len([r for r in rows if r["status"] == "ok"]), has_error
 
 
 def main():
@@ -244,6 +247,8 @@ def main():
     csv_path = os.path.join(out_dir, f"akasa_raw_{today_str}_batch_{windows_str}_{time_str}.csv")
     print(f"Target CSV: {csv_path}")
 
+    consecutive_errors = 0
+
     # Rule 1a: Horizons outer, routes inner
     for days_ahead in windows_to_scrape:
         print(f"\n{'='*60}")
@@ -253,8 +258,17 @@ def main():
 
         for origin, dest in routes_to_run:
             print(f"\n--- Scraping T+{days_ahead} ({origin} -> {dest}) ---")
-            usable = scrape_akasa(origin, dest, target_date, days_ahead, csv_path)
+            usable, has_error = scrape_akasa(origin, dest, target_date, days_ahead, csv_path)
             print(f"  -> {usable} usable quote(s) appended.")
+            
+            if has_error:
+                consecutive_errors += 1
+                if consecutive_errors >= 5:
+                    print("\n[CRITICAL] 5 consecutive technical failures detected! Triggering circuit breaker.")
+                    import sys
+                    sys.exit(1)
+            else:
+                consecutive_errors = 0
 
             # Rule 6a: Inter-route jitter 30-45s
             delay = random.uniform(30.0, 45.0)

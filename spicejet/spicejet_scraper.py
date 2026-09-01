@@ -153,6 +153,7 @@ def run(target_windows=None):
     csv_filename = f"spicejet_raw_{today_str}_batch_{windows_str}_{time_str}.csv"
     csv_path = os.path.join(data_dir, csv_filename)
     
+    consecutive_errors = 0
     for advance_days in windows_to_scrape:
         print(f"\n{'='*60}")
         print(f"  HORIZON: T+{advance_days}")
@@ -193,9 +194,15 @@ def run(target_windows=None):
                 
                 append_csv(quotes, csv_path)
                 print(f"  -> Appended to {csv_path}")
+                consecutive_errors = 0
                 
             except Exception as e:
                 print(f"  -> Error: {e}")
+                consecutive_errors += 1
+                if consecutive_errors >= 5:
+                    print("\n[CRITICAL] 5 consecutive technical failures detected! Triggering circuit breaker.")
+                    import sys
+                    sys.exit(1)
             finally:
                 driver.quit()
                 
