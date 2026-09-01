@@ -82,7 +82,33 @@ def run_scraper(script: str, missing: set) -> bool:
     ):
         try:
             subprocess.run(cmd, cwd=base, check=True)
+            
+            # Post-run verification: did it actually produce usable quotes?
+            import glob, pandas as pd
+            today_str = datetime.now(IST).strftime("%Y-%m-%d")
+            raw_dir = os.path.join(base, "apix_data", "raw", today_str)
+            
+            prefix = ""
+            for k, v in SCRAPERS.items():
+                if v["script"] == script:
+                    prefix = v["prefix"]
+                    break
+                    
+            if prefix and os.path.exists(raw_dir):
+                files = glob.glob(os.path.join(raw_dir, f"{prefix}_*.csv"))
+                if files:
+                    latest_file = max(files, key=os.path.getmtime)
+                    try:
+                        df = pd.read_csv(latest_file)
+                        ok_count = len(df[df['status'] == 'ok'])
+                        if ok_count == 0:
+                            print(f"  ❌  {script} exited with 0 but produced 0 usable quotes! Marking as FAILED.")
+                            return False
+                    except Exception as e:
+                        print(f"  ❌  Failed to verify CSV output: {e}")
+                        
             return True
+            
         except FileNotFoundError:
             if cmd[0] == "xvfb-run":
                 print("  xvfb-run not found — running without virtual display (macOS mode).")
@@ -94,7 +120,6 @@ def run_scraper(script: str, missing: set) -> bool:
             return False
 
     return False
-
 
 def main():
     now = datetime.now(IST)
