@@ -62,6 +62,11 @@ graph TD
         RAW --> CDI[compute_daily_index.py]
         CDI --> IDX[(apix_data/index/apix_index_daily.csv)]
     end
+
+    subgraph API_UI ["🌐 Presentation Layer"]
+        IDX --> API[FastAPI Backend (api.py)]
+        API --> UI[React/Vite Frontend Dashboard]
+    end
 ```
 
 ---
@@ -123,8 +128,13 @@ python3 smart_orchestrator.py
 # 4. Compute the daily index
 python3 compute_daily_index.py
 
-# 5. Or run a targeted single-carrier scrape
-python3 air_india/air_india_scraper.py --windows 1,7
+# 5. Start the backend API
+uvicorn api:app --reload --port 8000
+
+# 6. Start the frontend dashboard (in a new terminal)
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
@@ -172,9 +182,9 @@ All scrapers output **exactly** this 16-column schema (`docs/GUIDELINES.md` is t
 | **4-Carrier Coverage** | IndiGo, Air India (incl. Express codeshares), SpiceJet, Akasa Air — all in one pipeline. |
 | **Stealth Automation** | SeleniumBase UC mode + human-like character-by-character typing + random jitter delays bypass Cloudflare / Akamai bot detection. |
 | **Alternate Airport Filter** | Validates IATA codes on every flight card; discards NMI→BOM substitutions and logs to `discarded_routes.log`. |
-| **Resilient Fallback Logging** | Empty SRP or timeout → writes `status=no_flights_or_timeout` row instead of silently failing. |
+| **Resilient Fallback Logging** | Empty SRP or timeout → writes `status=error` or `no_flights` row instead of silently failing. |
 | **Unified Schema** | One canonical 16-column schema regardless of airline; documented in `docs/GUIDELINES.md`. |
-| **Engineering Rules** | `docs/SCRAPING_RULES.md` codifies driver lifecycle, synthetic event dispatch, timing protocol, and CSV spec for all scrapers. |
+| **Interactive Dashboard** | A modern React/Vite dashboard connected to a FastAPI backend to visualize inflation curves, fare gaps, and live index data. |
 
 ---
 
@@ -193,10 +203,12 @@ All scrapers output **exactly** this 16-column schema (`docs/GUIDELINES.md` is t
 
 **Done ✅**
 - Stealth scraping for all 4 domestic carriers (IndiGo, Air India, SpiceJet, Akasa).
-- `smart_orchestrator.py` with state-aware skip logic and inter-scraper cooldowns.
+- `smart_orchestrator.py` with state-aware skip logic, rigorous error validation, and circuit breakers.
 - `compute_daily_index.py` automated merge & deduplication pipeline.
 - GitHub Actions cron at 07:00, 10:00, 18:00, 23:00 IST.
 - Canonical schema, `docs/GUIDELINES.md` + `docs/SCRAPING_RULES.md`.
+- FastAPI backend to serve the computed daily index and historical trends.
+- React/Vite dashboard with route heatmaps, inflation curves, and fare gap analysis for MoSPI statisticians.
 
 **Next**
 - IQR outlier removal in `compute_daily_index.py` to filter glitch fares.
@@ -204,7 +216,6 @@ All scrapers output **exactly** this 16-column schema (`docs/GUIDELINES.md` is t
 
 **Future**
 - Laspeyres-style index computation weighted by DGCA route traffic data.
-- Visual dashboard (route heatmaps + inflation curves) for MoSPI statisticians.
 
 ---
 
@@ -215,11 +226,10 @@ All scrapers output **exactly** this 16-column schema (`docs/GUIDELINES.md` is t
 | Scraping | SeleniumBase (UC mode), undetected-chromedriver |
 | Parsing | BeautifulSoup4, regex |
 | Data | Pandas, CSV (atomic append) |
+| Backend | FastAPI, Uvicorn |
+| Frontend | React, Vite, Tailwind CSS, Recharts |
 | CI/CD | GitHub Actions (4× daily cron) |
-| Language | Python 3.11+ |
+| Language | Python 3.11+, TypeScript |
 
 ### License
 MIT License. Copyright © 2026 APIx Team.
-
-
-India’s official inflation number treats airfares like it’s still 2005. The current methodology relies on manual price checks a few times a month, despite prices swinging by 300% in a single day and 90% of bookings happening online. **APIx** fixes this. It is a resilient, automated data pipeline that continuously scrapes dynamic fare data from major airlines (IndiGo, SpiceJet), normalizes it, and constructs a statistically rigorous, DGCA-weighted price index. It completely replaces manual surveys with a real-time, automated data feed for the MoSPI and RBI.

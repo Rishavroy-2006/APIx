@@ -194,8 +194,8 @@ const LiveDataTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Line Chart */}
         <div className="lg:col-span-2 bg-white border border-border p-6">
-          <h3 className="font-serif text-xl text-navy mb-1">30-Day APIx Trend — {route}</h3>
-          <p className="text-xs text-textSecondary font-sans mb-6">Weighting: DGCA-style (estimated placeholder weights)</p>
+          <h3 className="font-serif text-xl text-navy mb-1">30-Day Route-Specific Price Trend — {route}</h3>
+          <p className="text-xs text-textSecondary font-sans mb-6">Calculation: Simple Median (Unweighted Route Trend)</p>
           
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">

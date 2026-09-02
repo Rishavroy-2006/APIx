@@ -184,9 +184,15 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
                     continue  # Skip connecting flights
 
                 price = int(price_str.replace(",", ""))
-                # Akasa only shows total fare on search results page — base/tax split not available
-                # fare_split_estimated=False because we are NOT estimating a split; we simply have no split.
-                # base_fare and taxes_and_fees are None per GUIDELINES.md Section 2.
+                
+                # Mathematical estimation based on Akasa fee structure:
+                # Taxable fixed fees = CUTE (75) + RCS (50) = 125
+                # Non-taxable fees = ASF (236) + UDF (Assumed avg ~150) = 386
+                # Total Fare = (Base + Taxable) * 1.05 + Non-taxable
+                # Base = ((Total - Non-taxable) / 1.05) - Taxable
+                estimated_base = max(0, round(((price - 386) / 1.05) - 125))
+                estimated_taxes = price - estimated_base
+
                 quote = FareQuote(
                     origin=origin,
                     destination=dest,
@@ -196,10 +202,10 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
                     travel_date=search_date_str,
                     advance_purchase_days=days_ahead,
                     fare_class="economy",
-                    base_fare=None,
-                    taxes_and_fees=None,
+                    base_fare=float(estimated_base),
+                    taxes_and_fees=float(estimated_taxes),
                     total_fare=float(price),
-                    fare_split_estimated=False,  # No split attempted — not estimated, just unavailable
+                    fare_split_estimated=True,  # Explicitly flagging that this was mathematically modeled
                     departure_time=dep_time,
                     status="ok",
                     scraped_at=now_iso,
