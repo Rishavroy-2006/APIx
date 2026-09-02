@@ -69,15 +69,6 @@ const CitizenDashboard = () => {
         selectedRoute={selectedRoute}
       />
 
-      {/* Portal Footer Note */}
-      <div className="text-xs font-sans text-textSecondary border-t border-border pt-4 flex flex-col md:flex-row justify-between gap-2">
-        <span>
-          APIx Citizen Portal &middot; SIH Problem Statement 26056
-        </span>
-        <span className="italic">
-          Fare quotes updated daily &middot; Trailing medians computed across active capture runs
-        </span>
-      </div>
 
     </div>
   );
