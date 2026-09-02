@@ -136,6 +136,17 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, SELECTORS["fare_card"])))
         except:
             print(f"Timeout waiting for results on T+{advance_days}")
+            if os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
+                try:
+                    from core.llm_fallback_parser import llm_extract_flights
+                    llm_quotes = llm_extract_flights(
+                        html_or_text=driver.page_source, origin=origin_code, destination=dest_code,
+                        travel_date=travel_date, advance_days=advance_days, source_scraper="indigo"
+                    )
+                    if llm_quotes:
+                        return llm_quotes
+                except Exception as _ex:
+                    print(f"  [LLM Fallback Warning] {_ex}")
             quotes.append(FareQuote(
                 origin_code, dest_code, "6E", "IndiGo", "unknown", travel_date, advance_days,
                 "unknown", None, None, None, False, "unknown", "error", now_iso, capture_run
@@ -275,6 +286,21 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                     departure_time="unknown", status="scrape_error",
                     scraped_at=now_iso, capture_run=capture_run
                 ))
+
+    usable = sum(1 for q in quotes if q.status == 'ok')
+    if usable == 0 and os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
+        try:
+            from core.llm_fallback_parser import llm_extract_flights
+            llm_quotes = llm_extract_flights(
+                html_or_text=driver.page_source, origin=origin_code, destination=dest_code,
+                travel_date=travel_date, advance_days=advance_days, source_scraper="indigo"
+            )
+            if llm_quotes:
+                return llm_quotes
+        except Exception as _ex:
+            print(f"  [LLM Fallback Warning] {_ex}")
+
+    return quotes
 
     except Exception as e:
         print(f"[ERROR] T+{advance_days}:", e)

@@ -1,0 +1,26 @@
+{
+  "site": "akasa",
+  "selectors": {
+    "fare_card": {
+      "value": "div.w-full.flex",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "total_fare": {
+      "value": "span.price-text, div.price",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "departure_time": {
+      "value": "div.time-text, span.departure",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "flight_num": {
+      "value": "span.flight-no, div.qp-flight",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    }
+  },
+  "pending_review": {}
+}

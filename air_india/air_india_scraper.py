@@ -223,6 +223,19 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
         quotes = parse_flight_cards(page_source, origin_code, dest_code, travel_date, advance_days, now_iso, capture_run)
 
         # Fallback if 0 cards found
+        usable = sum(1 for q in quotes if q.status == 'ok')
+        if usable == 0 and os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
+            try:
+                from core.llm_fallback_parser import llm_extract_flights
+                llm_quotes = llm_extract_flights(
+                    html_or_text=page_source, origin=origin_code, destination=dest_code,
+                    travel_date=travel_date, advance_days=advance_days, source_scraper="air_india"
+                )
+                if llm_quotes:
+                    quotes = llm_quotes
+            except Exception as _ex:
+                print(f"  [LLM Fallback Warning] {_ex}")
+
         if not quotes:
             print(f"[{origin_code}->{dest_code}] No flight cards found in DOM.")
             quotes.append(FareQuote(

@@ -1,0 +1,26 @@
+{
+  "site": "goibibo",
+  "selectors": {
+    "fare_card": {
+      "value": "div[class*='flightCardWrapper'], div[data-cy='fl-results-item']",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "total_fare": {
+      "value": "span[class*='price'], p[class*='fare']",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "departure_time": {
+      "value": "span[class*='departureTime'], p[class*='time']",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "flight_num": {
+      "value": "p[class*='flightNumber'], span[class*='flightCode']",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    }
+  },
+  "pending_review": {}
+}

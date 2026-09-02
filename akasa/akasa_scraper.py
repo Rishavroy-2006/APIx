@@ -214,6 +214,19 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
                 quotes.append(quote)
 
         if not quotes:
+            if os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
+                try:
+                    from core.llm_fallback_parser import llm_extract_flights
+                    llm_quotes = llm_extract_flights(
+                        html_or_text=driver.page_source, origin=origin, destination=dest,
+                        travel_date=search_date_str, advance_days=days_ahead, source_scraper="akasa"
+                    )
+                    if llm_quotes:
+                        quotes = llm_quotes
+                except Exception as _ex:
+                    print(f"  [LLM Fallback Warning] {_ex}")
+
+        if not quotes:
             quotes.append(FareQuote(
                 origin=origin,
                 destination=dest,

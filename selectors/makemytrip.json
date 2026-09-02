@@ -1,0 +1,26 @@
+{
+  "site": "makemytrip",
+  "selectors": {
+    "fare_card": {
+      "value": "li[data-testid='flight-result'], div.listingCard",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "total_fare": {
+      "value": "p.priceSection, span.blackFont",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "departure_time": {
+      "value": "p.flightTimeInfo, div.time-sec",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "flight_num": {
+      "value": "p.flightNumber, div.airline-code",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    }
+  },
+  "pending_review": {}
+}

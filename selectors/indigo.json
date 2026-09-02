@@ -1,0 +1,31 @@
+{
+  "site": "indigo",
+  "selectors": {
+    "fare_card": {
+      "value": "div.srp__search-result-list__item[data-journey-key]",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "total_fare": {
+      "value": "div.selected-fare__fare-price",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "departure_time": {
+      "value": "div.details-wrapper__flight-departure > div.time",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "fare_class": {
+      "value": "span.fare-category-chip",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "flight_num": {
+      "value": "div.details-wrapper__flight-departure",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    }
+  },
+  "pending_review": {}
+}

@@ -1,0 +1,26 @@
+{
+  "site": "spicejet",
+  "selectors": {
+    "fare_card": {
+      "value": "div.flight-card, div[data-testid='flight-card']",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "total_fare": {
+      "value": "span.fare-price, div.price",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "departure_time": {
+      "value": "div.departure-time, span.time",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "flight_num": {
+      "value": "div.flight-number, span.flight-code",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    }
+  },
+  "pending_review": {}
+}

@@ -183,6 +183,20 @@ def run(target_windows=None):
                 usable = sum(1 for q in quotes if q.status == 'ok')
                 print(f"  -> {len(quotes)} quote(s) captured ({usable} usable) | Status: {status}")
                 
+                if usable == 0 and os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
+                    try:
+                        from core.llm_fallback_parser import llm_extract_flights
+                        llm_quotes = llm_extract_flights(
+                            html_or_text=page_text, origin=origin, destination=dest,
+                            travel_date=date_str, advance_days=advance_days, source_scraper="spicejet"
+                        )
+                        if llm_quotes:
+                            quotes = llm_quotes
+                            status = "ok"
+                            usable = len(quotes)
+                    except Exception as _ex:
+                        print(f"  [LLM Fallback Warning] {_ex}")
+
                 if usable == 0:
                     quotes.append(FareQuote(
                         origin=origin, destination=dest, carrier_code="SG", carrier_name="SpiceJet",

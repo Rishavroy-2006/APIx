@@ -1,0 +1,41 @@
+{
+  "site": "air_india",
+  "selectors": {
+    "fare_card": {
+      "value": "ai-pb-flight-card",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "total_fare": {
+      "value": ".ai-pb-price",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "departure_time": {
+      "value": ".ai-pb-departure-time",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "flight_num": {
+      "value": ".ai-pb-flight-id",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "origin_code": {
+      "value": ".ai-pb-departure-city-code",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "destination_code": {
+      "value": ".ai-pb-arrival-city-code",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    },
+    "operated_by": {
+      "value": ".ai-pb-operated-by-info",
+      "last_verified_at": "2026-09-02T07:00:00+05:30",
+      "verified_by": "manual"
+    }
+  },
+  "pending_review": {}
+}

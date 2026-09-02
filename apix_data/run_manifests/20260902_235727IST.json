@@ -1,0 +1,55 @@
+{
+  "run_id": "20260902_235727IST",
+  "started_at": "2026-09-02T23:57:27.669985+05:30",
+  "skip_forecast": true,
+  "stages": {
+    "ingest": {
+      "duration_seconds": 0.73,
+      "master_rows": 10071,
+      "output_file": "C:\\Users\\aritr\\OneDrive\\Desktop\\LLM_flights\\apix_data\\processed\\fare_quotes_master.parquet"
+    },
+    "quality_scoring": {
+      "duration_seconds": 0.81,
+      "evaluated_rows": 10071,
+      "mean_confidence_score": 0.9997,
+      "perfect_score_rows": 10054,
+      "flag_counts": {
+        "fare_estimated": 17
+      },
+      "output_file": "C:\\Users\\aritr\\OneDrive\\Desktop\\LLM_flights\\apix_data\\processed\\quality_flagged.parquet"
+    },
+    "anomaly_detection": {
+      "duration_seconds": 1.84,
+      "evaluated_rows": 10071,
+      "total_flagged_rows": 4454,
+      "mean_confidence_score": 0.9413,
+      "mean_anomaly_score": -0.0064,
+      "flag_counts": {
+        "price_anomaly_ml": 3361,
+        "price_anomaly_statistical": 2354,
+        "fare_estimated": 17
+      },
+      "output_file": "C:\\Users\\aritr\\OneDrive\\Desktop\\LLM_flights\\apix_data\\processed\\quality_flagged.parquet",
+      "anomalies_file": "C:\\Users\\aritr\\OneDrive\\Desktop\\LLM_flights\\apix_data\\processed\\anomalies.parquet"
+    },
+    "fare_index": {
+      "duration_seconds": 0.26,
+      "indexed_dates": 3,
+      "date_range": [
+        "2026-08-31",
+        "2026-09-02"
+      ],
+      "latest_composite_index": 82.98,
+      "latest_completeness": 1.0,
+      "output_file": "C:\\Users\\aritr\\OneDrive\\Desktop\\LLM_flights\\apix_data\\index\\fare_index_daily.parquet",
+      "audit_file": "C:\\Users\\aritr\\OneDrive\\Desktop\\LLM_flights\\apix_data\\index\\excluded_fare_audit.parquet"
+    },
+    "forecasting": {
+      "executed": false,
+      "reason": "Skipped via --skip-forecast flag"
+    }
+  },
+  "status": "success",
+  "completed_at": "2026-09-02T23:57:31.315143+05:30",
+  "duration_seconds": 3.65
+}

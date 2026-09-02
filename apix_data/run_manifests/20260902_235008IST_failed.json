@@ -1,0 +1,8 @@
+{
+  "run_id": "20260902_235008IST",
+  "started_at": "2026-09-02T23:50:08.215966+05:30",
+  "skip_forecast": true,
+  "stages": {},
+  "status": "failed",
+  "error": "module 'core.ingest' has no attribute 'MASTER_PARQUET'"
+}
