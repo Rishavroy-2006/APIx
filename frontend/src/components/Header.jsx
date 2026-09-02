@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Header = ({ activeTab, setActiveTab, lastUpdated }) => {
-  const tabs = ['Overview', 'Live Data', 'Methodology', 'About'];
+  const tabs = ['Overview', 'Citizen Portal', 'Gov Portal', 'Live Data', 'Methodology', 'About'];
 
   return (
     <header className="bg-navy text-white px-6 py-4 flex flex-col md:flex-row md:items-center justify-between shadow-sm sticky top-0 z-50 gap-4 md:gap-0">

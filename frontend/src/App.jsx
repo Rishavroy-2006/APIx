@@ -5,6 +5,8 @@ import OverviewTab from './components/OverviewTab.jsx';
 import LiveDataTab from './components/LiveDataTab.jsx';
 import MethodologyTab from './components/MethodologyTab.jsx';
 import AboutTab from './components/AboutTab.jsx';
+import GovernmentDashboard from './components/GovernmentDashboard.jsx';
+import CitizenDashboard from './components/CitizenDashboard.jsx';
 import { getDailyIndex } from './api/client.js';
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
       
       <main className="flex-grow flex flex-col">
         {activeTab === 'Overview' && <OverviewTab indexData={indexData} setActiveTab={setActiveTab} />}
+        {activeTab === 'Citizen Portal' && <CitizenDashboard />}
+        {activeTab === 'Gov Portal' && <GovernmentDashboard />}
         {activeTab === 'Live Data' && <LiveDataTab />}
         {activeTab === 'Methodology' && <MethodologyTab />}
         {activeTab === 'About' && <AboutTab />}
