@@ -55,6 +55,7 @@ def get_daily_index():
         "routes_tracked": 6,
         "days_live": len(df["date"].unique()),
         "advance_windows": len(today_df),
+        "ota_premium_pct": round(today_df["ota_premium_pct"].mean(), 2) if "ota_premium_pct" in today_df.columns else 0.0,
         "timestamp": f"{latest_date}T23:59:00+05:30"
     }
 

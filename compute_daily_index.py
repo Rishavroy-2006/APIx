@@ -153,8 +153,23 @@ def compute_index(target_date_str=None):
 
     # 5. Compute Daily Weighted Composite Index (Laspeyres-style)
     print("Computing Weighted Composite Fare Index...")
+    if 'source' not in daily_df.columns:
+        daily_df['source'] = 'airline_direct'
+
+    # Compute OTA Premium per horizon
+    premium_dict = {}
+    ota_df = daily_df[(daily_df['status'] == 'ok') & (daily_df['source'] == 'ota') & (daily_df['outlier_flag'] == False)]
     # Exclude unvalidated/incidental carriers (Air India Express) from the core math
-    math_df = daily_df[(daily_df['status'] == 'ok') & (daily_df['outlier_flag'] == False) & (daily_df['carrier_name'] != 'Air India Express')]
+    math_df = daily_df[(daily_df['status'] == 'ok') & (daily_df['source'] == 'airline_direct') & (daily_df['outlier_flag'] == False) & (daily_df['carrier_name'] != 'Air India Express')]
+    
+    if not ota_df.empty:
+        ota_grp = ota_df.groupby(['origin', 'destination', 'flight_num', 'advance_purchase_days'])['total_fare'].median().reset_index(name='ota_fare')
+        dir_grp = math_df.groupby(['origin', 'destination', 'flight_num', 'advance_purchase_days'])['total_fare'].median().reset_index(name='dir_fare')
+        m = pd.merge(ota_grp, dir_grp, on=['origin', 'destination', 'flight_num', 'advance_purchase_days'])
+        if not m.empty:
+            m['premium_pct'] = ((m['ota_fare'] - m['dir_fare']) / m['dir_fare']) * 100
+            premium_dict = m.groupby('advance_purchase_days')['premium_pct'].mean().to_dict()
+
     median_fares = math_df.groupby(['origin', 'destination', 'advance_purchase_days'])['total_fare'].median().reset_index()
     
     composite_rows = []
@@ -179,7 +194,8 @@ def compute_index(target_date_str=None):
             composite_rows.append({
                 "date": target_date_str,
                 "advance_purchase_days": h,
-                "composite_score": round(composite_score, 2)
+                "composite_score": round(composite_score, 2),
+                "ota_premium_pct": round(premium_dict.get(h, 0.0), 2)
             })
             
     if composite_rows:

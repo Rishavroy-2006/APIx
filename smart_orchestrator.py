@@ -30,6 +30,16 @@ SCRAPERS = {
         "prefix": "akasa_raw",
         "script": "akasa/akasa_scraper.py",
     },
+    "MMT": {
+        "name":   "MakeMyTrip",
+        "prefix": "makemytrip_raw",
+        "script": "makemytrip/makemytrip_scraper.py",
+    },
+    "GO": {
+        "name":   "Goibibo",
+        "prefix": "goibibo_raw",
+        "script": "goibibo/goibibo_scraper.py",
+    },
 }
 
 REQUIRED_WINDOWS = {1, 7, 15, 30, 45}
@@ -165,7 +175,7 @@ def main():
     #    Longest scrapers (IndiGo, Air India) run first so the most
     #    critical T+1/T+7 data lands earliest.
     # ---------------------------------------------------------------
-    RUN_ORDER = ["6E", "AI", "SG", "QP"]
+    RUN_ORDER = ["6E", "AI", "SG", "QP", "MMT", "GO"]
     results   = {}
 
     for i, code in enumerate(RUN_ORDER):
