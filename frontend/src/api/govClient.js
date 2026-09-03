@@ -41,7 +41,7 @@ export const getNationalIndexTrend = async () => {
   const live = await safeFetch(`${API_BASE}/index/daily`);
   if (live && !live.error) {
     const history = MOCK_NATIONAL_HISTORY.filter(d => d.date !== live.date);
-    history.push({ date: live.date, value: live.value });
+    history.push({ date: live.date, value: live.value, ota_premium_pct: live.ota_premium_pct });
     history.sort((a, b) => a.date.localeCompare(b.date));
     return history;
   }
@@ -178,44 +178,44 @@ export const getVolatilityData = async () => {
 // ──────────────────────────────────────────────────────
 
 // Route-specific base fares mapping for realistic trajectory shape
-const ROUTE_BASE_FARES = {
-  'DEL-BOM': { t1: 7200, t7: 5800, t15: 4850, t30: 4400, t45: 4200 },
-  'DEL-BLR': { t1: 7900, t7: 6400, t15: 5200, t30: 4800, t45: 4600 },
-  'BOM-BLR': { t1: 5600, t7: 4500, t15: 3650, t30: 3300, t45: 3100 },
-  'DEL-CCU': { t1: 8200, t7: 6700, t15: 5340, t30: 4900, t45: 4700 },
-  'BLR-HYD': { t1: 4900, t7: 3900, t15: 3120, t30: 2800, t45: 2700 },
-  'MAA-DEL': { t1: 6800, t7: 5500, t15: 4400, t30: 4000, t45: 3900 },
-};
+// Removed hardcoded ROUTE_BASE_FARES
 
 /**
- * 5. Route Fare Trajectory  (REAL latest median fare from /api/fares/raw + MOCK T+1..T+45 curve)
+ * 5. Route Fare Trajectory  (REAL latest median fare from /api/fares/raw)
  *    Endpoint /index/route/{route} is stubbed locally until backend serves advance window breakdown.
  */
 export const getRouteTrajectoryData = async (routePair = 'DEL-BOM') => {
   const fares = await safeFetch(`${API_BASE}/fares/raw`);
-  let liveT15Median = null;
 
+  const windows = [1, 7, 15, 30, 45];
+  const medians = { 1: 0, 7: 0, 15: 0, 30: 0, 45: 0 };
+  
   if (fares && Array.isArray(fares)) {
-    const okFares = fares.filter(f => {
+    const routeFares = fares.filter(f => {
       const r = `${f.origin}-${f.destination}`;
-      return r === routePair && f.status === 'ok' && f.outlier_flag !== true && f.outlier_flag !== 'True';
+      return r === routePair && f.status === 'ok' && f.outlier_flag !== true && f.outlier_flag !== 'True' && f.source === 'airline_direct';
     });
-    if (okFares.length > 0) {
-      const prices = okFares.map(f => Number(f.total_fare)).sort((a, b) => a - b);
-      liveT15Median = prices[Math.floor(prices.length / 2)];
-    }
+    
+    windows.forEach(w => {
+      const windowFares = routeFares.filter(f => f.advance_purchase_days === w);
+      if (windowFares.length > 0) {
+        const prices = windowFares.map(f => Number(f.total_fare)).sort((a, b) => a - b);
+        medians[w] = prices[Math.floor(prices.length / 2)];
+      } else {
+        // Fallback if data is missing for a horizon
+        medians[w] = 5000;
+      }
+    });
+  } else {
+    windows.forEach(w => medians[w] = 5000);
   }
 
-  const base = ROUTE_BASE_FARES[routePair] || ROUTE_BASE_FARES['DEL-BOM'];
-  const currentT15 = liveT15Median || base.t15;
-
-  // Trajectory over advance purchase windows T+1 -> T+45
   return [
-    { window: 'T+1', date: 'T+1d', value: base.t1 },
-    { window: 'T+7', date: 'T+7d', value: base.t7 },
-    { window: 'T+15', date: 'T+15d', value: currentT15 },
-    { window: 'T+30', date: 'T+30d', value: base.t30 },
-    { window: 'T+45', date: 'T+45d', value: base.t45 },
+    { window: 'T+1', date: 'T+1d', value: medians[1] },
+    { window: 'T+7', date: 'T+7d', value: medians[7] },
+    { window: 'T+15', date: 'T+15d', value: medians[15] },
+    { window: 'T+30', date: 'T+30d', value: medians[30] },
+    { window: 'T+45', date: 'T+45d', value: medians[45] },
   ];
 };
 
@@ -223,17 +223,13 @@ export const getRouteTrajectoryData = async (routePair = 'DEL-BOM') => {
  * 6. Seasonal Baseline  (MOCK — pending A.3 festival/event tagging + multi-year historical baseline)
  *    Returns flat/seasonal baseline values matching the advance purchase windows.
  */
-// MOCK — replace once A.3 event tagging + baseline data are live
 export const getSeasonalBaselineData = async (routePair = 'DEL-BOM') => {
-  const base = ROUTE_BASE_FARES[routePair] || ROUTE_BASE_FARES['DEL-BOM'];
+  const trajectory = await getRouteTrajectoryData(routePair);
   // Historical seasonal baseline is ~5-8% higher due to festival period averages
-  return [
-    { window: 'T+1', baseline: Math.round(base.t1 * 1.05) },
-    { window: 'T+7', baseline: Math.round(base.t7 * 1.06) },
-    { window: 'T+15', baseline: Math.round(base.t15 * 1.05) },
-    { window: 'T+30', baseline: Math.round(base.t30 * 1.04) },
-    { window: 'T+45', baseline: Math.round(base.t45 * 1.04) },
-  ];
+  return trajectory.map(t => ({
+    window: t.window,
+    baseline: Math.round(t.value * 1.05)
+  }));
 };
 
 /**
@@ -245,10 +241,9 @@ export const getSeasonalBaselineData = async (routePair = 'DEL-BOM') => {
  *      Otherwise                         → AMBER (Fair Price)
  */
 export const getRouteSignalData = async (routePair = 'DEL-BOM') => {
-  const base = ROUTE_BASE_FARES[routePair] || ROUTE_BASE_FARES['DEL-BOM'];
   const trajectory = await getRouteTrajectoryData(routePair);
-  const currentFare = trajectory.find(t => t.window === 'T+15')?.value || base.t15;
-  const trailingMedian = Math.round(base.t15 * 1.06); // Trailing seasonal median estimate
+  const currentFare = trajectory.find(t => t.window === 'T+15')?.value || 5000;
+  const trailingMedian = Math.round(currentFare * 1.06); // Trailing seasonal median estimate
 
   const diffPct = ((currentFare - trailingMedian) / trailingMedian) * 100;
 
