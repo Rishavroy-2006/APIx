@@ -404,7 +404,7 @@ def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45, out
     routes_to_scrape = target_routes if target_routes else DEFAULT_ROUTES
     windows_str = "-".join([f"T{w}" for w in windows_to_scrape])
     
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(base_dir, output_dir, today_str)
     os.makedirs(data_dir, exist_ok=True)
     
@@ -432,12 +432,8 @@ def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45, out
             logger.warning(f"[Warmup Notice] {e}")
 
         for advance_days in windows_to_scrape:
-            horizon_csv_filename = f"goibibo_raw_{today_str}_T{advance_days}_{time_str}.csv"
-            horizon_csv_path = os.path.join(data_dir, horizon_csv_filename)
-
             logger.info(f"\n{'='*60}")
             logger.info(f"  GOIBIBO HORIZON: T+{advance_days}")
-            logger.info(f"  Target Horizon CSV: {horizon_csv_path}")
             logger.info(f"{'='*60}")
 
             for idx, (origin, dest) in enumerate(routes_to_scrape):
@@ -448,9 +444,8 @@ def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45, out
                     has_error = any(q.status == 'error' for q in quotes)
                     usable = sum(1 for q in quotes if q.status == 'ok')
                     logger.info(f"  -> {len(quotes)} quote(s) captured ({usable} usable)")
-                    append_csv(quotes, horizon_csv_path)
                     append_csv(quotes, csv_path)
-                    logger.info(f"  -> Appended to {horizon_csv_path}")
+                    logger.info(f"  -> Appended to {csv_path}")
                     
                     if has_error:
                         consecutive_errors += 1
