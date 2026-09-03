@@ -47,6 +47,8 @@ class FareQuote:
     status: str
     scraped_at: str
     capture_run: str
+    source: str
+    source_name: str
 
 def init_driver(headless: bool = False):
     options = uc.ChromeOptions()
@@ -109,7 +111,7 @@ def parse_page_flights(page_text: str, origin: str, dest: str, date_str: str, ad
                         departure_time=dep_time or "N/A",
                         status="ok",
                         scraped_at=now_iso,
-                        capture_run=capture_run
+                        capture_run=capture_run, source="airline_direct", source_name="SpiceJet"
                     ))
                     
     if not quotes:
@@ -203,7 +205,7 @@ def run(target_windows=None):
                         flight_num="unknown", travel_date=date_str, advance_purchase_days=advance_days,
                         fare_class="unknown", base_fare=None, taxes_and_fees=None, total_fare=None,
                         fare_split_estimated=False, departure_time="unknown", status=status,
-                        scraped_at=now_iso, capture_run=capture_run
+                        scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="SpiceJet"
                     ))
                 
                 append_csv(quotes, csv_path)

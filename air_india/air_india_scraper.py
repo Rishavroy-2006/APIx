@@ -49,6 +49,8 @@ class FareQuote:
     status: str
     scraped_at: str
     capture_run: str
+    source: str
+    source_name: str
 
 
 def human_type(sb, selector: str, text: str):
@@ -118,8 +120,7 @@ def parse_flight_cards(page_source: str, origin_code: str, dest_code: str, trave
 
         status = "ok" if (total_fare is not None and flight_num) else "parse_error"
 
-        quotes.append(FareQuote(
-            origin=origin_code,
+        quotes.append(FareQuote(origin=origin_code,
             destination=dest_code,
             carrier_code=carrier_code,
             carrier_name=carrier_name,
@@ -134,8 +135,7 @@ def parse_flight_cards(page_source: str, origin_code: str, dest_code: str, trave
             departure_time=dep_time,
             status=status,
             scraped_at=now_iso,
-            capture_run=capture_run
-        ))
+            capture_run=capture_run, source="airline_direct", source_name="Air India"))
 
     if discarded:
         print(f"  [Airport Filter] Discarded {discarded} card(s) with alternate airports.")
@@ -238,23 +238,19 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
 
         if not quotes:
             print(f"[{origin_code}->{dest_code}] No flight cards found in DOM.")
-            quotes.append(FareQuote(
-                origin=origin_code, destination=dest_code,
+            quotes.append(FareQuote(origin=origin_code, destination=dest_code,
                 carrier_code="AI", carrier_name="Air India",
                 flight_num="none", travel_date=travel_date, advance_purchase_days=advance_days,
                 fare_class="economy", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
-                departure_time="unknown", status="parse_error", scraped_at=now_iso, capture_run=capture_run
-            ))
+                departure_time="unknown", status="parse_error", scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="Air India"))
 
     except Exception as e:
         print(f"[ERROR] T+{advance_days} ({origin_code}->{dest_code}):", e)
-        quotes.append(FareQuote(
-            origin=origin_code, destination=dest_code,
+        quotes.append(FareQuote(origin=origin_code, destination=dest_code,
             carrier_code="AI", carrier_name="Air India",
             flight_num="error", travel_date=travel_date, advance_purchase_days=advance_days,
             fare_class="economy", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
-            departure_time="unknown", status="error", scraped_at=now_iso, capture_run=capture_run
-        ))
+            departure_time="unknown", status="error", scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="Air India"))
 
     return quotes
 

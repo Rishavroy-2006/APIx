@@ -1,3 +1,4 @@
+import os
 import time
 import csv
 import random
@@ -57,6 +58,8 @@ class FareQuote:
     status: str
     scraped_at: str
     capture_run: str
+    source: str
+    source_name: str
 
 
 def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: int) -> list[FareQuote]:
@@ -149,7 +152,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                     print(f"  [LLM Fallback Warning] {_ex}")
             quotes.append(FareQuote(
                 origin_code, dest_code, "6E", "IndiGo", "unknown", travel_date, advance_days,
-                "unknown", None, None, None, False, "unknown", "error", now_iso, capture_run
+                "unknown", None, None, None, False, "unknown", "error", now_iso, capture_run, source="airline_direct", source_name="IndiGo"
             ))
             return quotes
 
@@ -211,7 +214,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                         carrier_code=carrier_code, carrier_name=carrier_name,
                         flight_num=flight_num, travel_date=travel_date, advance_purchase_days=advance_days,
                         fare_class="", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
-                        departure_time=dep_time, status="sold_out", scraped_at=now_iso, capture_run=capture_run
+                        departure_time=dep_time, status="sold_out", scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="IndiGo"
                     ))
                     continue
 
@@ -247,7 +250,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                             carrier_code=carrier_code, carrier_name=carrier_name,
                             flight_num=flight_num, travel_date=travel_date, advance_purchase_days=advance_days,
                             fare_class=fare_class, base_fare=None, taxes_and_fees=None, total_fare=price_val, fare_split_estimated=False,
-                            departure_time=dep_time, status="ok", scraped_at=now_iso, capture_run=capture_run
+                            departure_time=dep_time, status="ok", scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="IndiGo"
                         ))
                 
                 if not fares_found:
@@ -262,7 +265,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                                 carrier_code=carrier_code, carrier_name=carrier_name,
                                 flight_num=flight_num, travel_date=travel_date, advance_purchase_days=advance_days,
                                 fare_class="economy", base_fare=None, taxes_and_fees=None, total_fare=float(num_str), fare_split_estimated=False,
-                                departure_time=dep_time, status="ok", scraped_at=now_iso, capture_run=capture_run
+                                departure_time=dep_time, status="ok", scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="IndiGo"
                             ))
                             fares_found = True
 
@@ -272,7 +275,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                         carrier_code=carrier_code, carrier_name=carrier_name,
                         flight_num=flight_num, travel_date=travel_date, advance_purchase_days=advance_days,
                         fare_class="", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
-                        departure_time=dep_time, status="parse_error", scraped_at=now_iso, capture_run=capture_run
+                        departure_time=dep_time, status="parse_error", scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="IndiGo"
                     ))
             except Exception as e:
                 print("[parse_error] card parse failed:", e)
@@ -284,23 +287,23 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
                     fare_class="unknown", base_fare=None, taxes_and_fees=None,
                     total_fare=None, fare_split_estimated=False,
                     departure_time="unknown", status="scrape_error",
-                    scraped_at=now_iso, capture_run=capture_run
-                ))
+                    scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="IndiGo"
+                    ))
 
-    usable = sum(1 for q in quotes if q.status == 'ok')
-    if usable == 0 and os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
-        try:
-            from core.llm_fallback_parser import llm_extract_flights
-            llm_quotes = llm_extract_flights(
-                html_or_text=driver.page_source, origin=origin_code, destination=dest_code,
-                travel_date=travel_date, advance_days=advance_days, source_scraper="indigo"
-            )
-            if llm_quotes:
-                return llm_quotes
-        except Exception as _ex:
-            print(f"  [LLM Fallback Warning] {_ex}")
+        usable = sum(1 for q in quotes if q.status == 'ok')
+        if usable == 0 and os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
+            try:
+                from core.llm_fallback_parser import llm_extract_flights
+                llm_quotes = llm_extract_flights(
+                    html_or_text=driver.page_source, origin=origin_code, destination=dest_code,
+                    travel_date=travel_date, advance_days=advance_days, source_scraper="indigo"
+                )
+                if llm_quotes:
+                    return llm_quotes
+            except Exception as _ex:
+                print(f"  [LLM Fallback Warning] {_ex}")
 
-    return quotes
+        return quotes
 
     except Exception as e:
         print(f"[ERROR] T+{advance_days}:", e)
@@ -309,7 +312,7 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
             carrier_code="6E", carrier_name="IndiGo",
             flight_num="error", travel_date=travel_date, advance_purchase_days=advance_days,
             fare_class="unknown", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
-            departure_time="unknown", status="error", scraped_at=now_iso, capture_run=capture_run
+            departure_time="unknown", status="error", scraped_at=now_iso, capture_run=capture_run, source="airline_direct", source_name="IndiGo"
         ))
 
     return quotes

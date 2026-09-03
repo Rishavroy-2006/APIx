@@ -59,6 +59,8 @@ class FareQuote(BaseModel):
     status: Literal["ok", "no_flights", "sold_out", "parse_error", "technical_error"]
     scraped_at: str
     capture_run: str
+    source: Literal["airline_direct", "ota"]
+    source_name: str
     source_scraper: Optional[str] = None
     source_file: Optional[str] = None
     data_source_method: Optional[str] = "regex_parser"
