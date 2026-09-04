@@ -66,8 +66,8 @@ def get_completed_horizons(prefix: str, today_str: str) -> set:
         try:
             df = pd.read_csv(fname)
             if all(col in df.columns for col in ['advance_purchase_days', 'origin', 'destination', 'status']):
-                # Drop catastrophic 'error' statuses so they don't count towards completion
-                df = df[df['status'] != 'error']
+                # Drop catastrophic 'error' and 'parse_error' statuses so they don't count towards completion
+                df = df[~df['status'].isin(['error', 'parse_error'])]
                 df['route'] = df['origin'] + "-" + df['destination']
                 
                 # Count unique routes processed per horizon
