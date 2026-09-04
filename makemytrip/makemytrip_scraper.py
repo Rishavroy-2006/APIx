@@ -119,7 +119,7 @@ def parse_flight_cards(page_source: str, origin_code: str, dest_code: str, trave
         # Fallback: search for cards with id starting with listing-card or data-test-id
         cards = soup.find_all("div", id=re.compile(r"^listing-card"))
 
-    quotes = []
+    quotes_dict = {}
     discarded = 0
 
     for card in cards:
@@ -177,27 +177,29 @@ def parse_flight_cards(page_source: str, origin_code: str, dest_code: str, trave
 
         # 3. Total Fare / Price
         total_fare = None
-        price_el = card.find(class_=re.compile(r"actual-price|blackText|price|clusterViewPrice"))
-        if price_el:
-            price_clean = re.sub(r"[^\d.]", "", price_el.get_text(strip=True))
-            if price_clean:
-                try:
-                    total_fare = float(price_clean)
-                except ValueError:
-                    pass
-
+        
+        # Strategy 1: Look for explicit currency symbol first (safest)
+        price_m = re.search(r"₹\s*([\d,]+)", card_text)
+        if price_m:
+            try:
+                total_fare = float(price_m.group(1).replace(",", ""))
+            except ValueError:
+                pass
+                
+        # Strategy 2: Look for specific price classes, avoiding generic text classes
         if total_fare is None:
-            # Fallback search for currency symbol ₹ in card text
-            price_m = re.search(r"₹\s*([\d,]+)", card_text)
-            if price_m:
-                try:
-                    total_fare = float(price_m.group(1).replace(",", ""))
-                except ValueError:
-                    pass
+            price_el = card.find(class_=re.compile(r"actual-price|clusterViewPrice|price(?!-)|fare", re.IGNORECASE))
+            if price_el:
+                price_clean = re.sub(r"[^\d]", "", price_el.get_text(strip=True))
+                if price_clean and len(price_clean) >= 3:
+                    try:
+                        total_fare = float(price_clean)
+                    except ValueError:
+                        pass
 
-        status = "ok" if (total_fare is not None and flight_num) else "parse_error"
+        status = "ok" if (total_fare is not None and total_fare > 1000 and flight_num) else "parse_error"
 
-        quotes.append(FareQuote(origin=origin_code,
+        quote = FareQuote(origin=origin_code,
             destination=dest_code,
             carrier_code=carrier_code,
             carrier_name=carrier_name,
@@ -212,11 +214,15 @@ def parse_flight_cards(page_source: str, origin_code: str, dest_code: str, trave
             departure_time=dep_time,
             status=status,
             scraped_at=now_iso,
-            capture_run=capture_run, source="ota", source_name="MakeMyTrip"))
+            capture_run=capture_run, source="ota", source_name="MakeMyTrip")
+            
+        key = (flight_num, dep_time)
+        if key not in quotes_dict or quotes_dict[key].status == 'parse_error':
+            quotes_dict[key] = quote
 
     if discarded:
         print(f"  [Airport Filter] Discarded {discarded} card(s) with alternate airports.")
-    return quotes
+    return list(quotes_dict.values())
 
 
 def handle_popups(sb):
@@ -273,7 +279,8 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
             except Exception:
                 pass
             
-            has_network_problem = "network problem" in page_source_sample or "unable to connect" in page_source_sample
+            is_waf_block = len(page_source_sample) < 1000 or "200-ok" in page_source_sample
+            has_network_problem = "network problem" in page_source_sample or "unable to connect" in page_source_sample or is_waf_block
             
             btn_found = None
             for sel in refresh_selectors:
@@ -304,7 +311,14 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
                         pass
             else:
                 print("  [Notice] Reloading page via browser refresh...")
-                sb.refresh()
+                if is_waf_block:
+                    print("  [Notice] WAF block detected (200-OK). Clearing cookies and bouncing session...")
+                    sb.delete_all_cookies()
+                    sb.open(BASE_URL)
+                    sb.sleep(random.uniform(3.0, 5.0))
+                    sb.open(search_url)
+                else:
+                    sb.refresh()
                 sb.sleep(random.uniform(5.0, 7.0))
                 handle_popups(sb)
 
@@ -418,7 +432,18 @@ def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45):
                 
                 try:
                     quotes = scrape_one_window(sb, origin, dest, advance_days)
-                    has_error = any(q.status == 'error' for q in quotes)
+                    has_error = any(q.status in ['error', 'parse_error'] for q in quotes)
+                    
+                    if has_error:
+                        print("  [Notice] Block/Error detected. IP ban suspected. Initiating 3-minute cooldown...")
+                        sb.sleep(180)  # 3 minute cooldown for IP unban
+                        sb.delete_all_cookies()
+                        sb.open(BASE_URL)
+                        sb.sleep(random.uniform(4.0, 6.0))
+                        handle_popups(sb)
+                        quotes = scrape_one_window(sb, origin, dest, advance_days)
+                        has_error = any(q.status in ['error', 'parse_error'] for q in quotes)
+
                     usable = sum(1 for q in quotes if q.status == 'ok')
                     print(f"  -> {len(quotes)} quote(s) captured ({usable} usable)")
                     append_csv(quotes, csv_path)
