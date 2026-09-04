@@ -1,9 +1,9 @@
 """
 core/quality_scoring.py
 =======================
-Reads apix_data/processed/fare_quotes_master.parquet, computes a confidence_score
+Reads udaan_data/processed/fare_quotes_master.parquet, computes a confidence_score
 (0.0–1.0) and quality_flags (list[str]) for every row, and writes the result to
-apix_data/processed/quality_flagged.parquet.
+udaan_data/processed/quality_flagged.parquet.
 
 Scoring rules (additive from 1.0; clamped to [0, 1]):
   -0.30  flag "llm_sourced"          if data_source_method == "llm_fallback"
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # Config
 # ──────────────────────────────────────────────────────────────────────────────
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "processed")
+PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "processed")
 MASTER_PARQUET = os.path.join(PROCESSED_DIR, "fare_quotes_master.parquet")
 OUTPUT_PARQUET = os.path.join(PROCESSED_DIR, "quality_flagged.parquet")
 SELECTORS_DIR = os.path.join(_PROJECT_ROOT, "selectors")
@@ -253,7 +253,7 @@ def run(
     output_parquet: str = OUTPUT_PARQUET,
 ) -> pd.DataFrame:
     print(f"\n{'='*70}")
-    print("  APIx Quality Scoring")
+    print("  Udaan Metrics Quality Scoring")
     print(f"{'='*70}")
 
     if not os.path.exists(input_parquet):

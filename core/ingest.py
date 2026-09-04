@@ -9,8 +9,8 @@ from core.fare_schema import normalize_row, FareQuote
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-RAW_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "apix_data", "raw")
-PROCESSED_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "apix_data", "processed")
+RAW_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "udaan_data", "raw")
+PROCESSED_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "udaan_data", "processed")
 PARQUET_PATH = os.path.join(PROCESSED_DATA_DIR, "fare_quotes_master.parquet")
 
 DEDUP_KEYS = ["origin", "destination", "flight_num", "travel_date", "capture_run", "source_scraper"]
@@ -53,7 +53,7 @@ def ingest_raw_csvs(raw_dir: str = RAW_DATA_DIR, parquet_path: str = PARQUET_PAT
     normalized_quotes: List[dict] = []
 
     print(f"\n{'='*70}")
-    print(f"  APIx Data Ingestion Pipeline")
+    print(f"  Udaan Metrics Data Ingestion Pipeline")
     print(f"{'='*70}")
     print(f"Found {len(csv_files)} raw CSV file(s) under '{raw_dir}'.\n")
 

@@ -1,11 +1,11 @@
 """
 core/fare_index.py
 ==================
-Builds the APIx Daily Flight Fare Index from `quality_flagged.parquet`.
+Builds the Udaan Metrics Daily Flight Fare Index from `quality_flagged.parquet`.
 
 Rules:
 1. Exclude rows with status != "ok" OR quality_flags containing "price_anomaly_statistical".
-   Keep excluded rows in `apix_data/index/excluded_fare_audit.parquet` with an
+   Keep excluded rows in `udaan_data/index/excluded_fare_audit.parquet` with an
    `exclusion_reason` column.
 2. Per (route, advance_purchase_days, travel_date / scraped_date), compute the median
    total_fare across all carriers/scrapers.
@@ -13,7 +13,7 @@ Rules:
    re-base to 100.0 on the first collection day). Per-route sub-indices are also built.
 4. Calculate a `data_completeness` column (fraction of expected route × horizon
    combinations with usable data each day).
-5. Write `apix_data/index/fare_index_daily.parquet`.
+5. Write `udaan_data/index/fare_index_daily.parquet`.
 """
 
 import os
@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 # Config & Paths
 # ──────────────────────────────────────────────────────────────────────────────
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "processed")
-INDEX_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "index")
+PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "processed")
+INDEX_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "index")
 
 INPUT_PARQUET = os.path.join(PROCESSED_DIR, "quality_flagged.parquet")
 OUTPUT_INDEX_PARQUET = os.path.join(INDEX_DIR, "fare_index_daily.parquet")
@@ -217,7 +217,7 @@ def run(
     excluded_audit_parquet: str = EXCLUDED_AUDIT_PARQUET,
 ) -> pd.DataFrame:
     print(f"\n{'='*70}")
-    print("  APIx Daily Flight Fare Index Generator")
+    print("  Udaan Metrics Daily Flight Fare Index Generator")
     print(f"{'='*70}")
 
     if not os.path.exists(input_parquet):

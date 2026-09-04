@@ -1,4 +1,4 @@
-name: APIx Daily Scrapers
+name: Udaan Metrics Daily Scrapers
 
 on:
   schedule:
@@ -66,12 +66,12 @@ jobs:
       - name: Commit and Push CSVs
         if: always()
         run: |
-          git config --global user.name "APIx Github Bot"
+          git config --global user.name "Udaan Metrics Github Bot"
           git config --global user.email "bot@apix.local"
 
           # Add all outputs: raw CSVs, index, and airport filter log
-          git add apix_data/raw/
-          git add apix_data/index/
+          git add udaan_data/raw/
+          git add udaan_data/index/
           git add compute_daily_index.py
           git add discarded_routes.log || true   # may not exist if no alternates were seen
 

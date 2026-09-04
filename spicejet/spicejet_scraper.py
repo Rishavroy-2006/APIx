@@ -149,7 +149,7 @@ def run(target_windows=None):
     windows_str = "-".join([f"T{w}" for w in windows_to_scrape])
     
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(base_dir, "apix_data", "raw", today_str)
+    data_dir = os.path.join(base_dir, "udaan_data", "raw", today_str)
     os.makedirs(data_dir, exist_ok=True)
     
     csv_filename = f"spicejet_raw_{today_str}_batch_{windows_str}_{time_str}.csv"

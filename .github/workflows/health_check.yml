@@ -1,4 +1,4 @@
-name: APIx Health Check
+name: Udaan Metrics Health Check
 
 on:
   schedule:
@@ -22,7 +22,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Checking the status of the primary APIx Daily Scrapers workflow..."
+          echo "Checking the status of the primary Udaan Metrics Daily Scrapers workflow..."
           
           # Fetch the most recent run of the primary workflow
           RECENT_RUN=$(gh run list --workflow "apix_daily.yml" --limit 1 --json status,conclusion)

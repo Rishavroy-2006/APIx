@@ -52,7 +52,7 @@ def get_completed_horizons(prefix: str, today_str: str) -> set:
     """Return the set of advance-purchase-day integers successfully completed on disk.
        A horizon is only considered complete if all 6 routes were processed."""
     raw_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           "apix_data", "raw", today_str)
+                           "udaan_data", "raw", today_str)
     if not os.path.exists(raw_dir):
         return set()
 
@@ -108,7 +108,7 @@ def run_scraper(script: str, missing: set) -> bool:
             # Post-run verification: did it actually produce usable quotes?
             import glob, pandas as pd
             today_str = datetime.now(IST).strftime("%Y-%m-%d")
-            raw_dir = os.path.join(base, "apix_data", "raw", today_str)
+            raw_dir = os.path.join(base, "udaan_data", "raw", today_str)
             
             prefix = ""
             for k, v in SCRAPERS.items():
@@ -147,7 +147,7 @@ def main():
     today_str = now.strftime("%Y-%m-%d")
 
     print(f"\n{'='*62}")
-    print(f"  APIx Smart Orchestrator  —  {now.strftime('%Y-%m-%d %H:%M IST')}")
+    print(f"  Udaan Metrics Smart Orchestrator  —  {now.strftime('%Y-%m-%d %H:%M IST')}")
     print(f"{'='*62}")
     print(f"  Required windows: T+{', T+'.join(str(w) for w in sorted(REQUIRED_WINDOWS))}")
 

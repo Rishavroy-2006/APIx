@@ -68,7 +68,7 @@ const GovernmentDashboard = () => {
         {/* Footer Note */}
         <div className="text-xs font-sans text-textSecondary border-t border-border pt-4 flex flex-col md:flex-row justify-between gap-2">
           <span>
-            APIx Government Portal &middot; SIH Problem Statement 26056 &middot; Submitted to MoSPI
+            Udaan Metrics Government Portal &middot; SIH Problem Statement 26056 &middot; Submitted to MoSPI
           </span>
           <span className="italic">
             Data refreshed daily via automated scraping pipeline &middot; Weights pending official DGCA traffic report

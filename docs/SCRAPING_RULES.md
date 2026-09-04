@@ -1,4 +1,4 @@
-# APIx Web Scraping Architecture & Extraction Rules
+# Udaan Metrics Web Scraping Architecture & Extraction Rules
 
 This document outlines the scraping architecture, engineering rules, and anti-bot mitigation patterns implemented across our production airline scrapers (exemplified by [`indigo_scraper_uc.py`](file:///Users/rishavroy/SIH/indigo/indigo_scraper_uc.py) and [`air_india_scraper.py`](file:///Users/rishavroy/SIH/air_india/air_india_scraper.py)).
 
@@ -139,7 +139,7 @@ This document outlines the scraping architecture, engineering rules, and anti-bo
 
 ## 7. Canonical CSV Output Schema
 
-All scrapers must write to `apix_data/raw/<YYYY-MM-DD>/<carrier>_raw_<YYYY-MM-DD>_batch_<windows>_<HHMM>IST.csv` adhering to the exact 16-column specification:
+All scrapers must write to `udaan_data/raw/<YYYY-MM-DD>/<carrier>_raw_<YYYY-MM-DD>_batch_<windows>_<HHMM>IST.csv` adhering to the exact 16-column specification:
 
 | Column Name | Type | Description | Example |
 | :--- | :--- | :--- | :--- |

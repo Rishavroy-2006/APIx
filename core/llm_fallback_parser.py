@@ -77,11 +77,11 @@ def save_raw_html_sample(
     trimmed_html: str, origin: str, destination: str, travel_date: str, source_scraper: str
 ) -> str:
     """
-    Saves trimmed HTML sample to disk under apix_data/raw_html_samples/
+    Saves trimmed HTML sample to disk under udaan_data/raw_html_samples/
     and returns relative path.
     """
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    samples_dir = os.path.join(base_dir, "apix_data", "raw_html_samples")
+    samples_dir = os.path.join(base_dir, "udaan_data", "raw_html_samples")
     os.makedirs(samples_dir, exist_ok=True)
 
     timestamp = datetime.now(IST).strftime("%Y%m%d_%H%M%S")

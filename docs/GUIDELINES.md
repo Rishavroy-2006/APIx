@@ -1,8 +1,8 @@
-# APIx — Data Pipeline Guidelines
+# Udaan Metrics — Data Pipeline Guidelines
 ### SIH 26056 · Real-time Airfare Price Index
 **Status: Binding for all scraper, cleaning, and index code — human or AI-agent authored.**
 
-This document is the single source of truth for how APIx collects, cleans, and
+This document is the single source of truth for how Udaan Metrics collects, cleans, and
 indexes fare data. If any code (yours, a teammate's, or an AI coding agent's)
 disagrees with this file, **this file wins** — open an issue/PR to change the
 guideline first, then change the code. This prevents the schema/logic drift we
@@ -73,7 +73,7 @@ way physical CPI collectors visit the same shop at the same time each cycle.
 
 - **Scrape at fixed times only**: The orchestrator must initiate the daily pipeline at **07:00 IST**. 
   Because a full run across all carriers takes 2-3 hours, starting at 07:00 ensures the 
-  final APIx Index is calculated and published reliably by **10:00 IST**.
+  final Udaan Metrics Index is calculated and published reliably by **10:00 IST**.
   Optionally add a second fixed run at **18:00 IST** if time allows, tracked as
   a separate `capture_run` value (e.g. `_AM` / `_PM`) — never blended silently
   into one number.
@@ -110,7 +110,7 @@ way physical CPI collectors visit the same shop at the same time each cycle.
 
 ## 5. Which Fare Feeds the Index
 
-- **The core APIx uses `economy_fare` rows only** (`fare_class == 'economy'`).
+- **The core Udaan Metrics uses `economy_fare` rows only** (`fare_class == 'economy'`).
   CPI reflects what typical consumers actually pay — overwhelmingly economy
   class. Business fares are a different consumption basket entirely.
 - **Business-class fares are tracked and reported separately** (e.g. a

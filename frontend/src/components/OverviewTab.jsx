@@ -16,7 +16,7 @@ const OverviewTab = ({ indexData, setActiveTab }) => {
       {/* Headline Stat Card */}
       <div className="border border-border bg-white p-8 border-l-4 border-l-navy flex flex-col md:flex-row justify-between items-start md:items-end">
         <div>
-          <div className="text-xs font-sans text-textSecondary uppercase tracking-widest mb-2">APIX TODAY</div>
+          <div className="text-xs font-sans text-textSecondary uppercase tracking-widest mb-2">UDAAN METRICS TODAY</div>
           <div className="flex items-baseline gap-4">
             <h2 className="font-serif text-6xl font-bold text-navy">{indexData.value}</h2>
             <span className="font-mono text-xs uppercase bg-bg text-textSecondary px-2 py-1 rounded-sm border border-border">
@@ -31,7 +31,7 @@ const OverviewTab = ({ indexData, setActiveTab }) => {
 
       {/* Problem Paragraph */}
       <p className="font-sans text-lg leading-relaxed text-textPrimary max-w-4xl">
-        India's CPI still relies on periodic manual checks for airfares, failing to capture extreme intra-day volatility. APIx scrapes real carrier fares daily to compute an accurate, real-time index.
+        India's CPI still relies on periodic manual checks for airfares, failing to capture extreme intra-day volatility. Udaan Metrics scrapes real carrier fares daily to compute an accurate, real-time index.
       </p>
 
       {/* Stat Row */}

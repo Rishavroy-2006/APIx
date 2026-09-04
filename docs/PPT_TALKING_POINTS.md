@@ -1,4 +1,4 @@
-# APIx: Hackathon Pitch & PPT Talking Points
+# Udaan Metrics: Hackathon Pitch & PPT Talking Points
 
 > **Purpose:** This document tracks the key strategic narratives, technical achievements, and "gotchas" to highlight in the final presentation to the judges.
 
@@ -7,7 +7,7 @@
 ## 1. The `robots.txt` Paradox (Legal & Ethical Reality)
 * **The Problem:** The hackathon explicitly asks for an automated airfare scraper, but all airlines explicitly forbid scraping their booking engines in their `robots.txt` (e.g., `Disallow: /booking/*`).
 * **Our MVP Solution:** To prove the mathematical and engineering viability of the CPI pipeline during this 10-day sprint, we *had* to bypass this using stealth browsers (`undetected-chromedriver`) and spoofed user agents. 
-* **The Winning Pitch (Long-Term):** Pure scraping is a fragile cat-and-mouse game and unsuitable for Government of India infrastructure. We will pitch that the production version of APIx must migrate away from scraping and rely on **official MoUs and B2B API integrations** with airlines (similar to what MakeMyTrip has). This shows the judges we have deep systems-thinking and understand legal compliance.
+* **The Winning Pitch (Long-Term):** Pure scraping is a fragile cat-and-mouse game and unsuitable for Government of India infrastructure. We will pitch that the production version of Udaan Metrics must migrate away from scraping and rely on **official MoUs and B2B API integrations** with airlines (similar to what MakeMyTrip has). This shows the judges we have deep systems-thinking and understand legal compliance.
 
 ## 2. Smart Automation & Rate Limiting (The Engineering Flex)
 * **The Problem:** Traditional scrapers get immediately blocked by enterprise firewalls like Akamai and Cloudflare (which IndiGo uses).

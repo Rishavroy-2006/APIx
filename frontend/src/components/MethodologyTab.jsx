@@ -73,7 +73,7 @@ const MethodologyTab = () => {
         </p>
         <div className="bg-[#1C2530] text-gray-200 font-mono text-sm p-6 overflow-x-auto rounded-sm">
           <pre>
-{`APIx_t = (Σ (P_it * W_i) / Σ (P_i0 * W_i)) * 100
+{`Udaan Metrics_t = (Σ (P_it * W_i) / Σ (P_i0 * W_i)) * 100
 
 Where: 
 P_it = Current price at time t

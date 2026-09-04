@@ -1,5 +1,5 @@
 # Hackathon Strategy Report
-### Real-time Airfare Price Index (APIx) for India — Smart Automation of CPI Data Collection
+### Real-time Airfare Price Index (Udaan Metrics) for India — Smart Automation of CPI Data Collection
 
 | | |
 |---|---|
@@ -124,7 +124,7 @@ Full production-grade anti-bot scraping for 6 airlines and 5+ OTAs is unrealisti
 **Core Functionality**
 - Scheduled scraper (runs 2x/day) pulling fares across the route × window × source matrix.
 - Cleaning pipeline: outlier removal (IQR + rule-based sold-out/error detection), fare decomposition (base/tax/fee where extractable), de-duplication across overlapping OTA-airline listings.
-- Index engine: daily APIx per route plus an aggregate weighted national index using DGCA traffic-share weights (documented Laspeyres-style fixed-basket formula).
+- Index engine: daily Udaan Metrics per route plus an aggregate weighted national index using DGCA traffic-share weights (documented Laspeyres-style fixed-basket formula).
 - Backtest module: compares computed index trend vs. publicly available DGCA monthly average fares, with correlation/error metrics.
 - Dashboard: national index trend line, sector-wise heatmap, lead-time elasticity curve, carrier comparison, data-quality/coverage indicator.
 - Public API (FastAPI): endpoints for daily index, per-route index, and raw fares (with auth key) for RBI/MoSPI consumption.
@@ -188,7 +188,7 @@ Python (Playwright, Pandas, NumPy, FastAPI), PostgreSQL/TimescaleDB, Airflow (or
 
 ## 10. Elevator Pitch (30 Seconds)
 
-> "Right now, India's official inflation number treats airfares like it's still 2005 — a few manual price checks a month, even though fares swing 300% in a single day and 90% of tickets are bought online. We built **APIx** — a real-time Airfare Price Index that automatically scrapes IndiGo, Air India, SpiceJet, and top OTAs every day, cleans out the noise, and computes a statistically rigorous, DGCA-weighted price index across India's busiest routes — backtested against official government data. It's not just a dashboard; it's a plug-and-play data pipeline MoSPI and RBI can actually consume via API, with self-healing scrapers so it doesn't break the moment a website changes. This is inflation measurement, modernized."
+> "Right now, India's official inflation number treats airfares like it's still 2005 — a few manual price checks a month, even though fares swing 300% in a single day and 90% of tickets are bought online. We built **Udaan Metrics** — a real-time Airfare Price Index that automatically scrapes IndiGo, Air India, SpiceJet, and top OTAs every day, cleans out the noise, and computes a statistically rigorous, DGCA-weighted price index across India's busiest routes — backtested against official government data. It's not just a dashboard; it's a plug-and-play data pipeline MoSPI and RBI can actually consume via API, with self-healing scrapers so it doesn't break the moment a website changes. This is inflation measurement, modernized."
 
 ---
 

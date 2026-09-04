@@ -16,8 +16,8 @@ Pass 2 (ML IsolationForest - optional/stretch):
   Flag outliers (-1 predictions) as "price_anomaly_ml" and populates `anomaly_score`.
 
 Writes:
-  1. apix_data/processed/quality_flagged.parquet (updated in-place with anomaly flags & scores)
-  2. apix_data/processed/anomalies.parquet (contains only flagged rows for dashboard view)
+  1. udaan_data/processed/quality_flagged.parquet (updated in-place with anomaly flags & scores)
+  2. udaan_data/processed/anomalies.parquet (contains only flagged rows for dashboard view)
 """
 
 import os
@@ -30,7 +30,7 @@ from sklearn.ensemble import IsolationForest
 logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "processed")
+PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "processed")
 INPUT_PARQUET = os.path.join(PROCESSED_DIR, "quality_flagged.parquet")
 OUTPUT_PARQUET = os.path.join(PROCESSED_DIR, "quality_flagged.parquet")
 ANOMALIES_PARQUET = os.path.join(PROCESSED_DIR, "anomalies.parquet")
@@ -214,7 +214,7 @@ def run(
     anomalies_parquet: str = ANOMALIES_PARQUET,
 ) -> pd.DataFrame:
     print(f"\n{'='*70}")
-    print("  APIx Anomaly Detection Pipeline")
+    print("  Udaan Metrics Anomaly Detection Pipeline")
     print(f"{'='*70}")
 
     if not os.path.exists(input_parquet):

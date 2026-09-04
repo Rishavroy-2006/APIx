@@ -1,7 +1,7 @@
 """
 core/run_pipeline.py
 ====================
-Single master entrypoint for the APIx Data & Analytics Pipeline.
+Single master entrypoint for the Udaan Metrics Data & Analytics Pipeline.
 
 Executes stages in sequence:
   1. Data Ingestion      (core.ingest)
@@ -12,8 +12,8 @@ Executes stages in sequence:
 
 Outputs:
   - Clear section headers in terminal console output.
-  - JSON run manifest written to `apix_data/run_manifests/<timestamp>.json` and
-    `apix_data/run_manifests/latest_manifest.json`.
+  - JSON run manifest written to `udaan_data/run_manifests/<timestamp>.json` and
+    `udaan_data/run_manifests/latest_manifest.json`.
 """
 
 import os
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 IST = timezone(timedelta(hours=5, minutes=30))
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MANIFEST_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "run_manifests")
+MANIFEST_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "run_manifests")
 
 
 def print_section_header(title: str, step_num: int, total_steps: int = 5) -> None:
@@ -182,7 +182,7 @@ def execute_pipeline(skip_forecast: bool = False) -> dict:
             json.dump(manifest, f, indent=2, ensure_ascii=False)
 
         print(f"\n{'='*75}")
-        print(f"  APIx Pipeline Execution Completed Successfully in {elapsed_total:.2f}s")
+        print(f"  Udaan Metrics Pipeline Execution Completed Successfully in {elapsed_total:.2f}s")
         print(f"{'='*75}")
         print(f"  Run Manifest Saved To: {manifest_path}")
         print(f"  Latest Manifest Link:  {latest_manifest_path}")
@@ -204,7 +204,7 @@ def execute_pipeline(skip_forecast: bool = False) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="APIx Master Data & Analytics Pipeline Runner"
+        description="Udaan Metrics Master Data & Analytics Pipeline Runner"
     )
     parser.add_argument(
         "--skip-forecast",

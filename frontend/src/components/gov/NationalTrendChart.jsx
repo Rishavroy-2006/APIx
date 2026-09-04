@@ -5,7 +5,7 @@ import { getNationalIndexTrend } from '../../api/govClient.js';
 /**
  * NationalTrendChart — Government Dashboard Component #1
  *
- * Displays the national aggregate DGCA-weighted APIx index trend
+ * Displays the national aggregate DGCA-weighted Udaan Metrics index trend
  * over time, using the generic TrendChart with a MoM/YoY toggle.
  *
  * Data source: getNationalIndexTrend() from govClient.js
@@ -48,7 +48,7 @@ const NationalTrendChart = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="border border-border bg-white p-5 border-l-4 border-l-navy col-span-1 md:col-span-2">
           <div className="text-xs font-sans text-textSecondary uppercase tracking-widest mb-1">
-            National APIx Index
+            National Udaan Metrics Index
           </div>
           <div className="flex items-baseline gap-3">
             <span className="font-serif text-5xl font-bold text-navy">
@@ -91,7 +91,7 @@ const NationalTrendChart = () => {
       {/* Trend Chart */}
       <TrendChart
         data={data}
-        title="National APIx Index — 30-Day Trend"
+        title="National Udaan Metrics Index — 30-Day Trend"
         subtitle="Laspeyres-style, DGCA-weighted composite (estimated placeholder weights)"
         baseValue={100}
         color="#0B2C4D"

@@ -1,7 +1,7 @@
 """
 api/main.py
 ===========
-FastAPI Web API for APIx Flight Analytics & Self-Healing Scraper Registry.
+FastAPI Web API for Udaan Metrics Flight Analytics & Self-Healing Scraper Registry.
 
 Endpoints:
   GET /                         -> API Info & Sitemap
@@ -24,14 +24,14 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-logger = logging.getLogger("apix_api")
+logger = logging.getLogger("udaan_api")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Config & File Paths
 # ──────────────────────────────────────────────────────────────────────────────
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INDEX_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "index")
-PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "processed")
+INDEX_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "index")
+PROCESSED_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "processed")
 SELECTORS_DIR = os.path.join(_PROJECT_ROOT, "selectors")
 
 INDEX_PARQUET = os.path.join(INDEX_DIR, "fare_index_daily.parquet")
@@ -44,7 +44,7 @@ HEALING_LOG_JSONL = os.path.join(SELECTORS_DIR, "healing_log.jsonl")
 # FastAPI App Initialization
 # ──────────────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="APIx Flight Fare Index & Self-Healing API",
+    title="Udaan Metrics Flight Fare Index & Self-Healing API",
     description="High-frequency Indian aviation market index, data quality engine, and autonomous self-healing scraper monitoring API.",
     version="1.0.0",
     docs_url="/docs",
@@ -85,7 +85,7 @@ def _read_parquet_safe(path: str) -> pd.DataFrame:
 def get_root():
     """API Overview & Sitemap."""
     return {
-        "service": "APIx Flight Analytics API",
+        "service": "Udaan Metrics Flight Analytics API",
         "version": "1.0.0",
         "documentation": "/docs",
         "endpoints": [

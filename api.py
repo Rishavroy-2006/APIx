@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import math
 
-app = FastAPI(title="APIx Backend", description="Serving the Airfare Price Index Data")
+app = FastAPI(title="Udaan Metrics Backend", description="Serving the Airfare Price Index Data")
 
 # Allow CORS for local React dev
 app.add_middleware(
@@ -22,7 +22,7 @@ def safe_nan(val):
 
 @app.get("/api/index/daily")
 def get_daily_index():
-    composite_path = os.path.join("apix_data", "index", "apix_composite_index.csv")
+    composite_path = os.path.join("udaan_data", "index", "udaan_composite_index.csv")
     if not os.path.exists(composite_path):
         return {"error": "No composite index found"}
     
@@ -62,7 +62,7 @@ def get_daily_index():
 @app.get("/api/index/route/{pair}")
 def get_route_index(pair: str):
     # pair format expected: DEL-BOM
-    daily_path = os.path.join("apix_data", "index", "apix_index_daily.csv")
+    daily_path = os.path.join("udaan_data", "index", "udaan_index_daily.csv")
     if not os.path.exists(daily_path):
         return {"trend": []}
     
@@ -108,7 +108,7 @@ def get_route_index(pair: str):
 
 @app.get("/api/fares/raw")
 def get_raw_fares():
-    daily_path = os.path.join("apix_data", "index", "apix_index_daily.csv")
+    daily_path = os.path.join("udaan_data", "index", "udaan_index_daily.csv")
     if not os.path.exists(daily_path):
         return []
         
@@ -132,7 +132,7 @@ def get_raw_fares():
 @app.get("/api/index/heatmap")
 def get_heatmap():
     # Priority 6: Sector-wise Heatmap
-    daily_path = os.path.join("apix_data", "index", "apix_index_daily.csv")
+    daily_path = os.path.join("udaan_data", "index", "udaan_index_daily.csv")
     if not os.path.exists(daily_path):
         return []
         

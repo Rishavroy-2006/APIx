@@ -1,4 +1,4 @@
-# APIx — Real-time Airfare Price Index
+# Udaan Metrics — Real-time Airfare Price Index
 
 > Modernising India's official inflation number (CPI) through smart automation, real-time scraping, and AI-driven resilience.
 
@@ -10,9 +10,9 @@
 ![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)
 
-India's official inflation number treats airfares like it's still 2005. The current methodology relies on manual price checks a few times a month, despite prices swinging by 300% in a single day and 90% of bookings happening online. **APIx** fixes this — a resilient, automated data pipeline that scrapes live fare data from **4 major Indian airlines** (IndiGo, Air India, SpiceJet, Akasa Air) and **2 major OTAs** (MakeMyTrip, Goibibo). It normalises it into a unified schema, removes anomalies, and computes a statistically rigorous, DGCA-weighted price index. 
+India's official inflation number treats airfares like it's still 2005. The current methodology relies on manual price checks a few times a month, despite prices swinging by 300% in a single day and 90% of bookings happening online. **Udaan Metrics** fixes this — a resilient, automated data pipeline that scrapes live fare data from **4 major Indian airlines** (IndiGo, Air India, SpiceJet, Akasa Air) and **2 major OTAs** (MakeMyTrip, Goibibo). It normalises it into a unified schema, removes anomalies, and computes a statistically rigorous, DGCA-weighted price index. 
 
-APIx provides dual interactive dashboards: a **Government Panel** for MoSPI/RBI statisticians to track inflation and an **OTA Premium KPI**, alongside a **Citizen Dashboard** to help passengers make data-driven booking decisions.
+Udaan Metrics provides dual interactive dashboards: a **Government Panel** for MoSPI/RBI statisticians to track inflation and an **OTA Premium KPI**, alongside a **Citizen Dashboard** to help passengers make data-driven booking decisions.
 
 ---
 
@@ -27,7 +27,7 @@ sequenceDiagram
     participant Compute as compute_daily_index.py
 
     GA->>Orch: Trigger Daily Cron
-    Orch->>Orch: Scan apix_data/raw/ — find missing T+ windows
+    Orch->>Orch: Scan udaan_data/raw/ — find missing T+ windows
     Orch->>Scraper: Run only what's missing (6E, AI, SG, QP, MMT, Goibibo)
     Scraper->>Scraper: DOM Parsing & Validation
     opt DOM Changed / Parsing Failed
@@ -37,7 +37,7 @@ sequenceDiagram
     Scraper-->>Orch: ✅ Append CSV (or ❌ logged)
     Orch->>Compute: Trigger index computation
     Compute->>Compute: Apply IQR anomaly detection & Quality Scoring
-    Compute-->>GA: Commit apix_index_daily.csv to repo
+    Compute-->>GA: Commit udaan_index_daily.csv to repo
 ```
 
 ---
@@ -47,7 +47,7 @@ sequenceDiagram
 ```mermaid
 graph TD
     subgraph Automation ["⏰ Automation (GitHub Actions)"]
-        GA[Cron: 07:00 IST] --> SH[schedule_apix.sh]
+        GA[Cron: 07:00 IST] --> SH[schedule_udaan.sh]
         SH --> SO[smart_orchestrator.py]
     end
 
@@ -66,14 +66,14 @@ graph TD
     end
 
     subgraph Storage ["💾 Storage & Normalisation"]
-        Scrapers  -- Appends --> RAW[(apix_data/raw/YYYY-MM-DD/)]
+        Scrapers  -- Appends --> RAW[(udaan_data/raw/YYYY-MM-DD/)]
     end
 
     subgraph Processing ["📊 Processing Engine (core/)"]
         RAW --> AD[Anomaly Detection IQR]
         AD --> QS[Quality Scoring]
         QS --> CDI[compute_daily_index.py]
-        CDI --> IDX[(apix_index_daily.csv)]
+        CDI --> IDX[(udaan_index_daily.csv)]
     end
 
     subgraph Presentation ["🌐 Interactive Dashboards"]
@@ -100,7 +100,7 @@ SIH/
 ├── frontend/                      # React & Vite Presentation Layer
 │   ├── src/components/gov/        # MoSPI/RBI Statistician Dashboards
 │   └── src/components/citizen/    # Passenger Booking Indicators
-├── apix_data/                     # Raw CSV logs & master indexes
+├── udaan_data/                     # Raw CSV logs & master indexes
 ├── *_scraper.py                   # Airline & OTA Specific Scrapers (6 total)
 ├── smart_orchestrator.py          # State-aware runner & circuit breakers
 ├── compute_daily_index.py         # Merges raw CSVs → daily index
@@ -129,8 +129,8 @@ All scrapers collect **5 advance-purchase horizons**: `T+1`, `T+7`, `T+15`, `T+3
 
 ```bash
 # 1. Clone
-git clone https://github.com/Rishavroy-2006/APIx.git
-cd APIx
+git clone https://github.com/Rishavroy-2006/Udaan Metrics.git
+cd Udaan Metrics
 
 # 2. Install dependencies
 pip install undetected-chromedriver seleniumbase selenium pandas beautifulsoup4 lxml fastapi uvicorn google-genai
@@ -156,11 +156,11 @@ npm run dev
 
 | Feature | Detail |
 |---|---|
-| **AI LLM Fallback & Healer** | If a website updates its DOM and breaks the scraper, APIx seamlessly falls back to Gemini LLM to parse the HTML, and automatically generates updated JSON selectors for the next run. |
+| **AI LLM Fallback & Healer** | If a website updates its DOM and breaks the scraper, Udaan Metrics seamlessly falls back to Gemini LLM to parse the HTML, and automatically generates updated JSON selectors for the next run. |
 | **Dual Dashboards** | `Government Dashboard` (macroeconomic tracking, inflation curves, anomalies) and `Citizen Dashboard` (booking signals, trajectory charts). |
 | **OTA Premium Indexing** | Tracks the dynamic margin (markup/markdown) between direct airline fares and OTA aggregators in real-time. |
 | **Anomaly Detection** | Applies statistical IQR (Interquartile Range) validation to detect and filter out pricing glitches before they corrupt the master index. |
-| **State-Aware Orchestrator** | Scans `apix_data/raw/` to find exactly which T+ windows are missing — never re-scrapes what already exists. |
+| **State-Aware Orchestrator** | Scans `udaan_data/raw/` to find exactly which T+ windows are missing — never re-scrapes what already exists. |
 | **Prophet Forecasting** | Uses time-series modeling to project airfare inflation trends up to 30 days into the future. |
 | **Chaos Testing Demo** | Includes an interactive CLI (`demo/chaos_test.py`) to actively simulate airline website changes and watch the system self-heal in real time. |
 
@@ -212,4 +212,4 @@ All scrapers output **exactly** this 18-column schema (`docs/GUIDELINES.md` is t
 ---
 
 ### License
-MIT License. Copyright © 2026 APIx Team.
+MIT License. Copyright © 2026 Udaan Metrics Team.

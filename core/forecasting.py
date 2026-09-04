@@ -1,7 +1,7 @@
 """
 core/forecasting.py
 ===================
-Time-series forecasting module for the APIx Daily Flight Fare Index using Prophet.
+Time-series forecasting module for the Udaan Metrics Daily Flight Fare Index using Prophet.
 
 Features:
 - Fits Prophet models with weekly seasonality enabled (weekend/Monday fare premiums)
@@ -14,7 +14,7 @@ Features:
 - Contains a commented-out stub for future LSTM deep learning expansion (`forecast_lstm`).
 
 Output:
-- Writes `apix_data/index/forecast.parquet`.
+- Writes `udaan_data/index/forecast.parquet`.
 """
 
 import os
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # Config & Paths
 # ──────────────────────────────────────────────────────────────────────────────
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INDEX_DIR = os.path.join(_PROJECT_ROOT, "apix_data", "index")
+INDEX_DIR = os.path.join(_PROJECT_ROOT, "udaan_data", "index")
 
 INPUT_INDEX_PARQUET = os.path.join(INDEX_DIR, "fare_index_daily.parquet")
 OUTPUT_FORECAST_PARQUET = os.path.join(INDEX_DIR, "forecast.parquet")
@@ -208,7 +208,7 @@ def run(
     forecast_horizon_days: int = DEFAULT_FORECAST_HORIZON_DAYS,
 ) -> pd.DataFrame:
     print(f"\n{'='*70}")
-    print("  APIx Flight Fare Index Forecasting Pipeline (Prophet)")
+    print("  Udaan Metrics Flight Fare Index Forecasting Pipeline (Prophet)")
     print(f"{'='*70}")
 
     if not os.path.exists(input_parquet):

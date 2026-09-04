@@ -74,7 +74,7 @@ def find_html_fixture(site: str) -> str:
 
     sample_dir = os.path.join(
         os.path.dirname(demo_dir),
-        "apix_data",
+        "udaan_data",
         "raw_html_samples",
     )
     pattern = os.path.join(sample_dir, f"{site}*.html")
@@ -94,7 +94,7 @@ def run_chaos_demo(
     target_field: str = "total_fare",
     dry_run: bool = True,
 ) -> bool:
-    print_banner(f"APIx Autonomous Self-Healing Chaos Test ({site.upper()})")
+    print_banner(f"Udaan Metrics Autonomous Self-Healing Chaos Test ({site.upper()})")
 
     site_file = os.path.join(SELECTORS_DIR, f"{site}.json")
     backup_file = os.path.join(SELECTORS_DIR, f"{site}.json.bak")
@@ -287,7 +287,7 @@ def run_chaos_demo(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="APIx Self-Healing Chaos Engineering Demo")
+    parser = argparse.ArgumentParser(description="Udaan Metrics Self-Healing Chaos Engineering Demo")
     parser.add_argument("--site", default="spicejet", help="Target scraper site (default: spicejet)")
     parser.add_argument("--target-field", default="total_fare", help="Target field selector to corrupt (default: total_fare)")
     parser.add_argument("--live", action="store_true", help="Run against live web page instead of offline fixture")

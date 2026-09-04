@@ -43,7 +43,7 @@ debug_calendar.html
 cron_log.txt
 *.log
 
-# Note: We are explicitly NOT ignoring apix_data/raw/ because we want 
+# Note: We are explicitly NOT ignoring udaan_data/raw/ because we want 
 # GitHub Actions to commit and push the CSVs back to the repo.
 
 # Debug files

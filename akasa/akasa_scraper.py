@@ -322,7 +322,7 @@ def main():
     today_str = today.strftime("%Y-%m-%d")
     time_str = now_ist.strftime("%H%MIST")
 
-    out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "apix_data", "raw", today_str)
+    out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "udaan_data", "raw", today_str)
     os.makedirs(out_dir, exist_ok=True)
 
     windows_str = "-".join([f"T{w}" for w in windows_to_scrape])

@@ -23,9 +23,9 @@ def compute_index(target_date_str=None):
         # Default to today in UTC (matching the scraping timezone convention)
         target_date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    raw_dir = os.path.join("apix_data", "raw", target_date_str)
-    index_file = os.path.join("apix_data", "index", "apix_index_daily.csv")
-    composite_index_file = os.path.join("apix_data", "index", "apix_composite_index.csv")
+    raw_dir = os.path.join("udaan_data", "raw", target_date_str)
+    index_file = os.path.join("udaan_data", "index", "udaan_index_daily.csv")
+    composite_index_file = os.path.join("udaan_data", "index", "udaan_composite_index.csv")
     
     if not os.path.exists(raw_dir):
         print(f"No raw data directory found for {target_date_str}: {raw_dir}")

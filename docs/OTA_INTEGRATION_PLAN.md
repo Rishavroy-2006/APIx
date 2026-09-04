@@ -1,5 +1,5 @@
 # OTA Integration Plan
-**APIx — SIH 26056**  
+**Udaan Metrics — SIH 26056**  
 **Status: PLAN ONLY — no integration code written. Awaiting approval.**
 
 > **Pre-condition (Item E.1):** The OTA scraper scripts (MakeMyTrip / EaseMyTrip) have not been provided or located in this repository. This plan is written speculatively based on the canonical schema and their public search-page behavior. Before writing any integration code, the actual script files must be shared so their current output columns and types can be confirmed against Section A below.
@@ -46,7 +46,7 @@ For routes or carriers without a dedicated direct scraper (e.g. Air India Expres
 - Must be excluded from the composite index by default (see Role 3)
 
 ### Role 3: Core index
-The **composite APIx index remains airline-direct-only** unless a separate, explicitly documented decision is made to blend OTA data. Rationale: OTA fares include a platform margin that airline-direct fares don't, making them a different consumption series. Blending them silently would make the index indefensible to MoSPI or judges.
+The **composite Udaan Metrics index remains airline-direct-only** unless a separate, explicitly documented decision is made to blend OTA data. Rationale: OTA fares include a platform margin that airline-direct fares don't, making them a different consumption series. Blending them silently would make the index indefensible to MoSPI or judges.
 
 ---
 
@@ -86,7 +86,7 @@ Add a new **"Airline Direct vs OTA Price Comparison"** panel to the Live Data ta
 - **Table layout**: one row per `(flight_num, advance_purchase_days)` pair where both a direct and OTA quote exist on the same day
   - Columns: Flight, Window, Direct Fare, OTA Fare, Delta (₹), Delta (%)
 - **Highlight**: rows where |delta| > 5% get a colored flag (orange = OTA more expensive, green = OTA cheaper)
-- **Caption**: *"Airline-direct vs OTA fare comparison for the same published flight. OTA quotes are excluded from the APIx composite index."*
+- **Caption**: *"Airline-direct vs OTA fare comparison for the same published flight. OTA quotes are excluded from the Udaan Metrics composite index."*
 - **Empty state**: *"No matching airline-direct + OTA pairs for this route today."*
 
 ### Badge for OTA rows in fare table:

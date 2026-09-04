@@ -408,7 +408,7 @@ def append_csv(quotes: list[FareQuote], path: str):
             writer.writerow(asdict(q))
 
 
-def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45, output_dir="apix_data/raw"):
+def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45, output_dir="udaan_data/raw"):
     now = datetime.now(IST)
     today_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H%MIST")

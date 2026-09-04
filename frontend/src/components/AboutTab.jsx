@@ -5,7 +5,7 @@ const AboutTab = () => {
     <div className="max-w-3xl mx-auto px-6 py-16 space-y-16 animate-fade-in text-center">
       
       <section>
-        <h1 className="font-serif text-4xl md:text-5xl text-navy font-bold mb-4">APIx — Real-time Airfare Price Index</h1>
+        <h1 className="font-serif text-4xl md:text-5xl text-navy font-bold mb-4">Udaan Metrics — Real-time Airfare Price Index</h1>
         <p className="font-sans text-textSecondary text-lg max-w-2xl mx-auto leading-relaxed">
           SIH Problem Statement 26056 &middot; MoSPI &middot; Data Informatics & Innovation Division &middot; Theme: Smart Automation
         </p>

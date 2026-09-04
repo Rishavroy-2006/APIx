@@ -1,3 +1,3 @@
 """
-API Package for APIx Flight Analytics.
+API Package for Udaan Metrics Flight Analytics.
 """
