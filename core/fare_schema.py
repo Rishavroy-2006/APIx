@@ -133,7 +133,21 @@ def normalize_row(raw_dict: dict, source_scraper: str) -> FareQuote:
         # 6. Set source_scraper
         cleaned["source_scraper"] = source_scraper
 
-        # 7. Instantiate Pydantic model
+        # 7. Infer source and source_name if missing
+        if "source" not in cleaned or not cleaned["source"] or str(cleaned["source"]).lower() in ("nan", "none", ""):
+            cleaned["source"] = "ota" if "makemytrip" in source_scraper.lower() or "goibibo" in source_scraper.lower() else "airline_direct"
+
+        if "source_name" not in cleaned or not cleaned["source_name"] or str(cleaned["source_name"]).lower() in ("nan", "none", ""):
+            s_name = source_scraper.lower()
+            if "indigo" in s_name: cleaned["source_name"] = "IndiGo"
+            elif "air_india" in s_name: cleaned["source_name"] = "Air India"
+            elif "spicejet" in s_name: cleaned["source_name"] = "SpiceJet"
+            elif "akasa" in s_name: cleaned["source_name"] = "Akasa Air"
+            elif "makemytrip" in s_name or "mmt" in s_name: cleaned["source_name"] = "MakeMyTrip"
+            elif "goibibo" in s_name: cleaned["source_name"] = "Goibibo"
+            else: cleaned["source_name"] = source_scraper.title()
+
+        # 8. Instantiate Pydantic model
         return FareQuote(**cleaned)
     except Exception as e:
         logger.error(f"Failed to normalize row from scraper '{source_scraper}': {e} | Raw row: {raw_dict}")
