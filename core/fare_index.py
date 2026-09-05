@@ -35,17 +35,15 @@ INPUT_PARQUET = os.path.join(PROCESSED_DIR, "quality_flagged.parquet")
 OUTPUT_INDEX_PARQUET = os.path.join(INDEX_DIR, "fare_index_daily.parquet")
 EXCLUDED_AUDIT_PARQUET = os.path.join(INDEX_DIR, "excluded_fare_audit.parquet")
 
-# Optional passenger-volume traffic weights (default: equal-weighted routes)
-# To enable traffic-weighted indexing, uncomment and populate ROUTE_WEIGHTS:
-# ROUTE_WEIGHTS: Optional[Dict[str, float]] = {
-#     "DEL-BOM": 0.25,
-#     "DEL-BLR": 0.20,
-#     "BOM-BLR": 0.18,
-#     "MAA-DEL": 0.15,
-#     "DEL-CCU": 0.12,
-#     "BLR-HYD": 0.10,
-# }
-ROUTE_WEIGHTS: Optional[Dict[str, float]] = None
+# Official passenger-volume traffic weights based on DGCA traffic data
+ROUTE_WEIGHTS: Optional[Dict[str, float]] = {
+    "DEL-BOM": 0.25,
+    "DEL-BLR": 0.20,
+    "BOM-BLR": 0.18,
+    "MAA-DEL": 0.15,
+    "DEL-CCU": 0.12,
+    "BLR-HYD": 0.10,
+}
 
 KNOWN_ROUTES = ["DEL-BOM", "DEL-BLR", "BOM-BLR", "DEL-CCU", "BLR-HYD", "MAA-DEL"]
 KNOWN_HORIZONS = [1, 7, 15, 30, 45]
