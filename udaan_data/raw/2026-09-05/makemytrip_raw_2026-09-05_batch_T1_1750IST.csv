@@ -1,0 +1,6 @@
+origin,destination,carrier_code,carrier_name,flight_num,travel_date,advance_purchase_days,fare_class,base_fare,taxes_and_fees,total_fare,fare_split_estimated,departure_time,status,scraped_at,capture_run,source,source_name
+DEL,BOM,QP,Akasa Air,QP-1940,2026-09-06,1,economy,,,6529.0,False,14:05,ok,2026-09-05T17:51:06.071679+05:30,2026-09-05_1751IST,ota,MakeMyTrip
+DEL,BOM,6E,IndiGo,6E-6328,2026-09-06,1,economy,,,6688.0,False,10:15,ok,2026-09-05T17:51:06.071679+05:30,2026-09-05_1751IST,ota,MakeMyTrip
+DEL,BOM,QP,Akasa Air,QP-1110,2026-09-06,1,economy,,,6893.0,False,10:30,ok,2026-09-05T17:51:06.071679+05:30,2026-09-05_1751IST,ota,MakeMyTrip
+DEL,BOM,AI,Air India,AI-1745,2026-09-06,1,economy,,,7000.0,False,05:00,ok,2026-09-05T17:51:06.071679+05:30,2026-09-05_1751IST,ota,MakeMyTrip
+DEL,BOM,AI,Air India,AI-2975,2026-09-06,1,economy,,,7000.0,False,06:30,ok,2026-09-05T17:51:06.071679+05:30,2026-09-05_1751IST,ota,MakeMyTrip
