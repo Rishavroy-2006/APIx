@@ -162,8 +162,16 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
 
         # 2. Select One Way
         print(f"[{origin_code}->{dest_code}] Selecting One Way...")
-        sb.click("//span[normalize-space(text())='One Way']")
-        sb.sleep(random.uniform(0.8, 1.4))
+        try:
+            sb.click("//*[translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='one way']")
+            sb.sleep(random.uniform(0.8, 1.4))
+        except Exception:
+            try:
+                sb.click("mat-select[formcontrolname='journeyType']")
+                sb.sleep(1)
+                sb.click("//span[contains(text(), 'One')]")
+            except Exception as e:
+                print(f"  [Notice] Could not explicitly click One Way, continuing. {e}")
 
         # 3. Enter Origin
         print(f"[{origin_code}->{dest_code}] Entering Origin ({origin_code})...")
@@ -216,7 +224,10 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
 
         # 7. Wait for results
         print(f"[{origin_code}->{dest_code}] Waiting for flight results to load...")
-        sb.sleep(15)
+        try:
+            sb.wait_for_element("ai-pb-flight-card, .mat-mdc-snack-bar-label", timeout=25)
+        except Exception:
+            sb.sleep(5)
 
         # 8. Parse DOM
         page_source = sb.get_page_source()

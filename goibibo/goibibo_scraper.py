@@ -431,7 +431,7 @@ def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45, out
     logger.info(f"Routes    : {routes_to_scrape}")
     logger.info("=" * 70)
     
-    with SB(uc=True) as sb:
+    with SB(uc=True, uc_cdp=True) as sb:
         consecutive_errors = 0
         
         # Warm-up session on Goibibo homepage

@@ -74,7 +74,17 @@ def scrape_one_window(driver, origin_code: str, dest_code: str, advance_days: in
     capture_run = now.strftime("%Y-%m-%d_%H%MIST")
 
     try:
-        driver.get(BASE_URL)
+        # Add retry logic for driver.get
+        for attempt in range(3):
+            try:
+                driver.set_page_load_timeout(30)
+                driver.get(BASE_URL)
+                break
+            except Exception as e:
+                print(f"[{origin_code}->{dest_code}] Page load attempt {attempt+1} failed: {e}")
+                if attempt == 2:
+                    raise
+                time.sleep(5)
         
         wait = WebDriverWait(driver, 20)
         

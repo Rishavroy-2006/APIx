@@ -407,7 +407,7 @@ def run(target_windows=None, target_routes=None, delay_min=30, delay_max=45):
     print(f"Starting SeleniumBase UC session for MakeMyTrip scraping...")
     print(f"Target CSV: {csv_path}")
     
-    with SB(uc=True) as sb:
+    with SB(uc=True, uc_cdp=True) as sb:
         consecutive_errors = 0
         
         # Warm-up session on homepage to establish essential tokens/cookies

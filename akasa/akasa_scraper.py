@@ -101,7 +101,12 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
         
         # Aggressive clear and focus via JS
         driver.execute_script("arguments[0].value = ''; arguments[0].focus(); arguments[0].click();", from_input)
-        human_type(from_input, origin)
+        try:
+            human_type(from_input, origin)
+        except Exception:
+            from selenium.webdriver.common.action_chains import ActionChains
+            ActionChains(driver).send_keys(origin).perform()
+            
         time.sleep(random.uniform(1.5, 2.5))
         from_option = wait.until(EC.element_to_be_clickable(
             (By.XPATH, f"//div[contains(text(), '{origin}')] | //p[contains(text(), '{origin}')] | //span[contains(text(), '{origin}')]")
@@ -123,7 +128,11 @@ def scrape_akasa(origin: str, dest: str, target_date: datetime.date, days_ahead:
         to_input.send_keys(Keys.CONTROL + "a")
         to_input.send_keys(Keys.BACKSPACE)
         driver.execute_script("arguments[0].value = '';", to_input)
-        human_type(to_input, dest)
+        try:
+            human_type(to_input, dest)
+        except Exception:
+            from selenium.webdriver.common.action_chains import ActionChains
+            ActionChains(driver).send_keys(dest).perform()
         time.sleep(random.uniform(1.5, 2.5))
         to_option = wait.until(EC.element_to_be_clickable(
             (By.XPATH, f"//div[contains(text(), '{dest}')] | //p[contains(text(), '{dest}')] | //span[contains(text(), '{dest}')]")
