@@ -1,47 +1,47 @@
 {
-  "run_id": "20260905_194608IST",
-  "started_at": "2026-09-05T19:46:08.957241+05:30",
+  "run_id": "20260905_194527IST",
+  "started_at": "2026-09-05T19:45:27.018825+05:30",
   "skip_forecast": false,
   "stages": {
     "ingest": {
-      "duration_seconds": 1.21,
-      "master_rows": 23402,
+      "duration_seconds": 1.26,
+      "master_rows": 23328,
       "output_file": "/Users/rishavroy/SIH/udaan_data/processed/fare_quotes_master.parquet"
     },
     "quality_scoring": {
-      "duration_seconds": 1.33,
-      "evaluated_rows": 23402,
-      "mean_confidence_score": 0.9989,
-      "perfect_score_rows": 23236,
+      "duration_seconds": 1.29,
+      "evaluated_rows": 23328,
+      "mean_confidence_score": 0.9993,
+      "perfect_score_rows": 23219,
       "flag_counts": {
-        "fare_estimated": 166,
+        "fare_estimated": 109,
         "cross_source_confirmed": 74
       },
       "output_file": "/Users/rishavroy/SIH/udaan_data/processed/quality_flagged.parquet"
     },
     "anomaly_detection": {
       "duration_seconds": 1.03,
-      "evaluated_rows": 23402,
-      "total_flagged_rows": 11683,
-      "mean_confidence_score": 0.9406,
-      "mean_anomaly_score": 0.0002,
+      "evaluated_rows": 23328,
+      "total_flagged_rows": 11555,
+      "mean_confidence_score": 0.941,
+      "mean_anomaly_score": 0.0,
       "flag_counts": {
-        "price_anomaly_statistical": 5464,
-        "price_anomaly_ml": 9351,
-        "fare_estimated": 166,
+        "price_anomaly_statistical": 5441,
+        "price_anomaly_ml": 9288,
+        "fare_estimated": 109,
         "cross_source_confirmed": 74
       },
       "output_file": "/Users/rishavroy/SIH/udaan_data/processed/quality_flagged.parquet",
       "anomalies_file": "/Users/rishavroy/SIH/udaan_data/processed/anomalies.parquet"
     },
     "fare_index": {
-      "duration_seconds": 0.18,
+      "duration_seconds": 0.17,
       "indexed_dates": 6,
       "date_range": [
         "2026-08-31",
         "2026-09-05"
       ],
-      "latest_composite_index": 91.17,
+      "latest_composite_index": 92.03,
       "latest_completeness": 1.0,
       "output_file": "/Users/rishavroy/SIH/udaan_data/index/fare_index_daily.parquet",
       "audit_file": "/Users/rishavroy/SIH/udaan_data/index/excluded_fare_audit.parquet"
@@ -55,6 +55,6 @@
     }
   },
   "status": "success",
-  "completed_at": "2026-09-05T19:46:12.707239+05:30",
-  "duration_seconds": 3.75
+  "completed_at": "2026-09-05T19:45:30.775591+05:30",
+  "duration_seconds": 3.76
 }
