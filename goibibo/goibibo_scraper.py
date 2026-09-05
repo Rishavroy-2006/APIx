@@ -355,6 +355,12 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
         dismiss_overlays(sb)
         handle_refresh_prompt(sb)
 
+        # Wait for flight cards
+        try:
+            sb.wait_for_element_visible("div[class*='listingCard'], div[class*='clusterCard'], div[class*='flt-card'], div[id^='listing-card']", timeout=12)
+        except Exception:
+            pass
+
         # Scroll page to load dynamic flight cards
         logger.info(f"[{origin_code}->{dest_code}] Scrolling page to load flight listings...")
         for _ in range(3):
@@ -377,11 +383,33 @@ def scrape_one_window(sb, origin_code: str, dest_code: str, advance_days: int) -
 
         if not quotes:
             logger.warning(f"[{origin_code}->{dest_code}] No flight cards parsed from DOM.")
-            quotes.append(FareQuote(origin=origin_code, destination=dest_code,
-                carrier_code="GOI", carrier_name="Goibibo",
-                flight_num="none", travel_date=travel_date, advance_purchase_days=advance_days,
-                fare_class="Economy", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
-                departure_time="unknown", status="parse_error", scraped_at=now_iso, capture_run=capture_run, source="ota", source_name="Goibibo"))
+            
+            if os.getenv("ENABLE_LLM_FALLBACK", "false").lower() == "true":
+                try:
+                    from core.llm_fallback_parser import llm_extract_flights
+                    llm_qs = llm_extract_flights(
+                        html_or_text=page_source, origin=origin_code, destination=dest_code,
+                        travel_date=travel_date, advance_days=advance_days, source_scraper="goibibo"
+                    )
+                    for lq in llm_qs:
+                        quotes.append(FareQuote(
+                            origin=lq.origin, destination=lq.destination, carrier_code=lq.carrier_code,
+                            carrier_name=lq.carrier_name, flight_num=lq.flight_num, travel_date=lq.travel_date,
+                            advance_purchase_days=lq.advance_purchase_days, fare_class=lq.fare_class,
+                            base_fare=lq.base_fare, taxes_and_fees=lq.taxes_and_fees, total_fare=lq.total_fare,
+                            fare_split_estimated=lq.fare_split_estimated, departure_time=lq.departure_time,
+                            status=lq.status, scraped_at=lq.scraped_at, capture_run=lq.capture_run,
+                            source="ota", source_name="Goibibo"
+                        ))
+                except Exception as ex:
+                    logger.warning(f"  [LLM Fallback Warning] {ex}")
+
+            if not quotes:
+                quotes.append(FareQuote(origin=origin_code, destination=dest_code,
+                    carrier_code="GOI", carrier_name="Goibibo",
+                    flight_num="none", travel_date=travel_date, advance_purchase_days=advance_days,
+                    fare_class="Economy", base_fare=None, taxes_and_fees=None, total_fare=None, fare_split_estimated=False,
+                    departure_time="unknown", status="parse_error", scraped_at=now_iso, capture_run=capture_run, source="ota", source_name="Goibibo"))
 
     except Exception as e:
         logger.error(f"[ERROR] T+{advance_days} ({origin_code}->{dest_code}): {e}")

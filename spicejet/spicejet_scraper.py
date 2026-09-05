@@ -58,7 +58,7 @@ def init_driver(headless: bool = False):
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     
-    driver = uc.Chrome(options=options, version_main=151)
+    driver = uc.Chrome(options=options, version_main=152)
     return driver
 
 def parse_page_flights(page_text: str, origin: str, dest: str, date_str: str, advance_days: int, now_iso: str, capture_run: str) -> Tuple[str, List[FareQuote]]:

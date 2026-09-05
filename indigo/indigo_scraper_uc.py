@@ -369,7 +369,7 @@ def run(target_windows=None):
             
             print("Starting fresh undetected-chromedriver session...")
             options = uc.ChromeOptions()
-            driver = uc.Chrome(options=options, version_main=151)
+            driver = uc.Chrome(options=options, version_main=152)
             
             try:
                 quotes = scrape_one_window(driver, origin, dest, advance_days)

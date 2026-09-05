@@ -52,7 +52,7 @@ def init_driver():
     options = uc.ChromeOptions()
     options.add_argument("--window-size=1920,1080")
     # NOTE: No --headless flag per SCRAPING_RULES Section 2 (headful windowed required)
-    driver = uc.Chrome(options=options, version_main=151)
+    driver = uc.Chrome(options=options, version_main=152)
     return driver
 
 
