@@ -152,6 +152,11 @@ npm run dev
 
 ---
 
+## ⚠️ Security Warning Before Deployment
+> **Important:** If you previously hardcoded any secrets (e.g., Gemini/Anthropic API keys, database URLs, etc.) during early development, that value will still exist permanently in the Git commit history even after you remove it from the code. **You must immediately rotate those API keys before deploying this app or pushing to a public repository.**
+
+---
+
 ## Core Features
 
 | Feature | Detail |

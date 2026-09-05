@@ -14,7 +14,7 @@ const AboutTab = () => {
       <section>
         <h2 className="font-serif text-2xl text-navy mb-6">Project Team</h2>
         <div className="bg-white border border-border py-4 px-8 inline-block shadow-sm">
-          <p className="font-sans text-textSecondary italic">Team names to be finalized</p>
+          <p className="font-sans font-bold text-navy text-xl">SkyScrapers</p>
         </div>
       </section>
 
@@ -32,9 +32,9 @@ const AboutTab = () => {
       <section>
         <h2 className="font-serif text-2xl text-navy mb-6">Resources</h2>
         <div className="flex flex-col items-center gap-4">
-          <a href="#" className="font-sans text-navy hover:text-steel underline underline-offset-4 decoration-border hover:decoration-steel transition-colors">GitHub Repository</a>
-          <a href="#" className="font-sans text-navy hover:text-steel underline underline-offset-4 decoration-border hover:decoration-steel transition-colors">Standalone Pipeline Demo (illustrative simulation)</a>
-          <a href="#" className="font-sans text-navy hover:text-steel underline underline-offset-4 decoration-border hover:decoration-steel transition-colors">Scraper Source Code</a>
+          <a href="https://github.com/Rishavroy-2006/Udaan-Metrics" target="_blank" rel="noopener noreferrer" className="font-sans text-navy hover:text-steel underline underline-offset-4 decoration-border hover:decoration-steel transition-colors">GitHub Repository</a>
+          <a href="https://github.com/Rishavroy-2006/Udaan-Metrics/tree/main/demo" target="_blank" rel="noopener noreferrer" className="font-sans text-navy hover:text-steel underline underline-offset-4 decoration-border hover:decoration-steel transition-colors">Standalone Pipeline Demo (Chaos Test)</a>
+          <a href="https://github.com/Rishavroy-2006/Udaan-Metrics/blob/main/smart_orchestrator.py" target="_blank" rel="noopener noreferrer" className="font-sans text-navy hover:text-steel underline underline-offset-4 decoration-border hover:decoration-steel transition-colors">Scraper Source Code & Orchestrator</a>
         </div>
       </section>
 

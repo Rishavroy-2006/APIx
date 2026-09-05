@@ -1,4 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { SkeletonPage } from './common/SkeletonLoaders.jsx';
 
 const StatCard = ({ label, value }) => (
   <div className="border border-border bg-white p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
@@ -8,7 +10,8 @@ const StatCard = ({ label, value }) => (
 );
 
 const OverviewTab = ({ indexData, setActiveTab }) => {
-  if (!indexData) return <div className="p-8">Loading...</div>;
+  const navigate = useNavigate();
+  if (!indexData) return <SkeletonPage />;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 space-y-12 animate-fade-in">
@@ -24,7 +27,7 @@ const OverviewTab = ({ indexData, setActiveTab }) => {
             </span>
           </div>
           <p className="font-sans text-sm text-textSecondary mt-4">
-            {indexData.carriers.join(', ')} &middot; DEL-BOM &middot; Economy Class &middot; {indexData.days_live} days of live data collected &middot; DGCA weighting pending
+            Monitoring {indexData.carriers.length} Carriers across {indexData.routes_tracked} Routes &middot; {indexData.days_live} Days of Live Data
           </p>
         </div>
       </div>
@@ -51,7 +54,7 @@ const OverviewTab = ({ indexData, setActiveTab }) => {
       {/* Link to Live Data */}
       <div>
         <button 
-          onClick={() => setActiveTab('Live Data')}
+          onClick={() => navigate('/live-data')}
           className="font-sans text-navy font-semibold hover:text-steel transition-colors group flex items-center gap-2 py-2 px-4 -ml-4 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-navy"
         >
           See the live pipeline <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>

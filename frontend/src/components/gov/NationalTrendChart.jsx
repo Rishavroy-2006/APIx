@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonChart } from '../common/SkeletonLoaders.jsx';
 import TrendChart from '../common/TrendChart.jsx';
 import { getNationalIndexTrend } from '../../api/govClient.js';
 
@@ -26,15 +27,7 @@ const NationalTrendChart = () => {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="bg-white border border-border p-6">
-        <div className="h-64 flex items-center justify-center">
-          <p className="font-sans text-sm text-textSecondary animate-pulse">Loading national index trend...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <SkeletonChart height="h-72" />;
 
   // Calculate latest stats for the headline
   const latest = data.length > 0 ? data[data.length - 1] : null;

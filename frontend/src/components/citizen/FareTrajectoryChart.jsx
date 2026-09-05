@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonChart, SkeletonText, SkeletonCard } from '../common/SkeletonLoaders.jsx';
 import TrendChart from '../common/TrendChart.jsx';
 import SeasonalBaselineOverlay from './SeasonalBaselineOverlay.jsx';
 import { getRouteTrajectoryData, getSeasonalBaselineData } from '../../api/govClient.js';
@@ -46,9 +47,11 @@ const FareTrajectoryChart = ({ selectedRoute = 'DEL-BOM' }) => {
 
   if (loading) {
     return (
-      <div className="bg-white border border-border p-6">
-        <div className="h-64 flex items-center justify-center">
-          <p className="font-sans text-sm text-textSecondary animate-pulse">Loading fare trajectory for {selectedRoute}...</p>
+      <div className="space-y-4">
+        <SkeletonText className="h-10 w-full" />
+        <SkeletonChart height="h-64" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => <SkeletonCard key={i} height="h-24" />)}
         </div>
       </div>
     );
@@ -75,15 +78,22 @@ const FareTrajectoryChart = ({ selectedRoute = 'DEL-BOM' }) => {
         color="#0B2C4D"
         showToggle={false}
         showOverlay={showBaseline}
-        overlayLabel="Seasonal Baseline (Mocked)"
+        overlayLabel="Seasonal Baseline"
         overlayColor="#E98A15"
       />
 
       {/* Trajectory Key Takeaway Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-sans text-xs">
         {chartData.map(d => (
-          <div key={d.window} className="bg-white border border-border p-3 flex flex-col">
-            <span className="text-textSecondary font-semibold uppercase">{d.window} Window</span>
+          <div key={d.window} className="bg-white border border-border p-3 flex flex-col relative overflow-hidden">
+            <span className="text-textSecondary font-semibold uppercase flex items-center">
+              {d.window} Window
+              {d.isInterpolated && (
+                <span className="ml-2 text-[9px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 uppercase tracking-wider font-bold">
+                  Est
+                </span>
+              )}
+            </span>
             <span className="font-mono text-navy font-bold text-base mt-1">₹{d.value?.toLocaleString()}</span>
             {showBaseline && d.baseline && (
               <span className="text-[10px] text-textSecondary mt-0.5">

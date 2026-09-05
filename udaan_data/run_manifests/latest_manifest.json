@@ -1,0 +1,60 @@
+{
+  "run_id": "20260905_122744IST",
+  "started_at": "2026-09-05T12:27:44.681143+05:30",
+  "skip_forecast": false,
+  "stages": {
+    "ingest": {
+      "duration_seconds": 0.91,
+      "master_rows": 18366,
+      "output_file": "/Users/rishavroy/SIH/udaan_data/processed/fare_quotes_master.parquet"
+    },
+    "quality_scoring": {
+      "duration_seconds": 1.0,
+      "evaluated_rows": 18366,
+      "mean_confidence_score": 0.9991,
+      "perfect_score_rows": 18257,
+      "flag_counts": {
+        "fare_estimated": 109,
+        "cross_source_confirmed": 23
+      },
+      "output_file": "/Users/rishavroy/SIH/udaan_data/processed/quality_flagged.parquet"
+    },
+    "anomaly_detection": {
+      "duration_seconds": 0.86,
+      "evaluated_rows": 18366,
+      "total_flagged_rows": 8552,
+      "mean_confidence_score": 0.9386,
+      "mean_anomaly_score": -0.0055,
+      "flag_counts": {
+        "price_anomaly_statistical": 4442,
+        "price_anomaly_ml": 6427,
+        "fare_estimated": 109,
+        "cross_source_confirmed": 23
+      },
+      "output_file": "/Users/rishavroy/SIH/udaan_data/processed/quality_flagged.parquet",
+      "anomalies_file": "/Users/rishavroy/SIH/udaan_data/processed/anomalies.parquet"
+    },
+    "fare_index": {
+      "duration_seconds": 0.14,
+      "indexed_dates": 5,
+      "date_range": [
+        "2026-08-31",
+        "2026-09-04"
+      ],
+      "latest_composite_index": 79.83,
+      "latest_completeness": 1.0,
+      "output_file": "/Users/rishavroy/SIH/udaan_data/index/fare_index_daily.parquet",
+      "audit_file": "/Users/rishavroy/SIH/udaan_data/index/excluded_fare_audit.parquet"
+    },
+    "forecasting": {
+      "executed": true,
+      "duration_seconds": 0.0,
+      "forecast_rows": 0,
+      "targets_forecasted": [],
+      "output_file": "/Users/rishavroy/SIH/udaan_data/index/forecast.parquet"
+    }
+  },
+  "status": "success",
+  "completed_at": "2026-09-05T12:27:47.588448+05:30",
+  "duration_seconds": 2.91
+}

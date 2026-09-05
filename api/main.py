@@ -38,6 +38,7 @@ INDEX_PARQUET = os.path.join(INDEX_DIR, "fare_index_daily.parquet")
 FORECAST_PARQUET = os.path.join(INDEX_DIR, "forecast.parquet")
 QUALITY_PARQUET = os.path.join(PROCESSED_DIR, "quality_flagged.parquet")
 ANOMALIES_PARQUET = os.path.join(PROCESSED_DIR, "anomalies.parquet")
+MASTER_PARQUET = os.path.join(PROCESSED_DIR, "fare_quotes_master.parquet")
 HEALING_LOG_JSONL = os.path.join(SELECTORS_DIR, "healing_log.jsonl")
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ def _read_parquet_safe(path: str) -> pd.DataFrame:
 # Endpoints
 # ──────────────────────────────────────────────────────────────────────────────
 
-@app.get("/")
+@app.get("/api")
 def get_root():
     """API Overview & Sitemap."""
     return {
@@ -99,7 +100,7 @@ def get_root():
     }
 
 
-@app.get("/index/latest")
+@app.get("/api/index/latest")
 def get_latest_index():
     """
     Returns the latest daily composite index, composite fare, data completeness score,
@@ -120,11 +121,12 @@ def get_latest_index():
         "composite_fare_index": clean_row.get("composite_fare_index"),
         "composite_daily_fare": clean_row.get("composite_daily_fare"),
         "data_completeness": clean_row.get("data_completeness"),
+        "total_days_collected": len(df),
         "metrics": clean_row,
     }
 
 
-@app.get("/index/history")
+@app.get("/api/index/history")
 def get_index_history(
     route: Optional[str] = Query(None, description="Filter by route, e.g., DEL-BOM, DEL-BLR"),
     days: int = Query(30, ge=1, le=365, description="Trailing number of days to return"),
@@ -171,7 +173,7 @@ def get_index_history(
     }
 
 
-@app.get("/forecast")
+@app.get("/api/forecast")
 def get_forecast(
     route: Optional[str] = Query(None, description="Target index to forecast, e.g. composite_fare_index or index_DEL-BOM"),
 ):
@@ -212,7 +214,7 @@ def get_forecast(
     }
 
 
-@app.get("/quality/flags")
+@app.get("/api/quality/flags")
 def get_quality_flags(
     min_confidence: Optional[float] = Query(None, ge=0.0, le=1.0, description="Minimum confidence score threshold"),
     flag: Optional[str] = Query(None, description="Filter by quality flag, e.g. price_anomaly_ml, llm_sourced"),
@@ -254,7 +256,7 @@ def get_quality_flags(
     }
 
 
-@app.get("/selectors/health")
+@app.get("/api/selectors/health")
 def get_selectors_health():
     """
     Returns self-healing status of all scraper site CSS selectors and healing audit log.
@@ -305,6 +307,84 @@ def get_selectors_health():
         "sites": sites_summary,
         "recent_healing_events": healing_events[-50:],  # return trailing 50 events
     }
+
+
+
+
+@app.get("/api/fares/raw")
+def get_raw_fares():
+    """
+    Fallback endpoint to serve raw fare data from the master parquet file,
+    so the legacy React frontend UI components don't break.
+    """
+    df = _read_parquet_safe(MASTER_PARQUET)
+    if df.empty:
+        return []
+        
+    # React app expects a list of dicts.
+    # To handle batches that cross midnight, take the last 24 hours of data instead of matching the date string strictly.
+    if "scraped_at" in df.columns:
+        df["_parsed_dt"] = pd.to_datetime(df["scraped_at"], errors="coerce", utc=True)
+        max_dt = df["_parsed_dt"].max()
+        if pd.notna(max_dt):
+            df = df[df["_parsed_dt"] >= (max_dt - pd.Timedelta(hours=24))]
+        df = df.sort_values(by="scraped_at", ascending=False).drop(columns=["_parsed_dt"], errors="ignore")
+        
+    # Convert bools and NaNs to something JSON serializable
+    df = df.fillna("")
+    # Convert 'outlier_flag' if it exists to boolean string or native boolean to match frontend expectations
+    
+    return df.to_dict(orient="records")
+
+@app.get("/api/index/heatmap")
+def get_heatmap():
+    """
+    Returns route-wise percentage change compared to the previous day.
+    Uses the pre-aggregated INDEX_PARQUET to quickly calculate differences,
+    simulating the old /api/index/heatmap logic.
+    """
+    df = _read_parquet_safe(INDEX_PARQUET)
+    if df.empty:
+        return []
+        
+    df = df.sort_values("date")
+    dates = df["date"].unique()
+    if len(dates) == 0:
+        return []
+        
+    latest_date = dates[-1]
+    prev_date = dates[-2] if len(dates) > 1 else None
+    
+    latest_row = df[df["date"] == latest_date].iloc[0]
+    prev_row = df[df["date"] == prev_date].iloc[0] if prev_date else None
+    
+    results = []
+    # Identify route columns like 'fare_DEL-BOM'
+    route_fare_cols = [c for c in df.columns if c.startswith("fare_")]
+    for col in route_fare_cols:
+        route = col.replace("fare_", "")
+        current_fare = latest_row.get(col, 0)
+        
+        if prev_row is not None:
+            prev_fare = prev_row.get(col, current_fare)
+        else:
+            prev_fare = current_fare
+            
+        if pd.isna(current_fare): current_fare = 0
+        if pd.isna(prev_fare): prev_fare = current_fare
+            
+        if prev_fare == 0:
+            pct_change = 0
+        else:
+            pct_change = ((current_fare - prev_fare) / prev_fare) * 100
+            
+        results.append({
+            "route": route,
+            "pct_change": float(round(pct_change, 2)),
+            "current_fare": float(current_fare)
+        })
+        
+    return results
 
 
 if __name__ == "__main__":

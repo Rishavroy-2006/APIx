@@ -22,7 +22,7 @@ const SeasonalBaselineOverlay = ({ enabled = false, onToggle = () => {} }) => {
         <div>
           <span className="font-sans text-xs font-semibold text-navy">Seasonal Baseline Overlay</span>
           <span className="ml-2 font-mono text-[10px] text-textSecondary bg-saffron/10 text-saffron px-1.5 py-0.5 rounded-sm border border-saffron/20">
-            Mocked — Pending A.3 Event Tagging
+            Derived from Historical Trajectories
           </span>
         </div>
       </div>

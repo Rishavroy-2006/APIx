@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonText, SkeletonCard } from '../common/SkeletonLoaders.jsx';
 import { getRouteSignalData } from '../../api/govClient.js';
 
 /**
@@ -31,8 +32,15 @@ const BookNowWaitSignal = ({ selectedRoute = 'DEL-BOM' }) => {
 
   if (loading || !signalData) {
     return (
-      <div className="bg-white border border-border p-6 animate-pulse">
-        <p className="font-sans text-sm text-textSecondary">Calculating booking signal for {selectedRoute}...</p>
+      <div className="bg-white border border-border p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2 flex-grow w-full max-w-md">
+          <SkeletonText className="h-5 w-1/3" />
+          <SkeletonText className="h-3 w-3/4" />
+        </div>
+        <div className="flex gap-4">
+          <SkeletonCard height="h-20" className="w-32" />
+          <SkeletonCard height="h-20" className="w-32" />
+        </div>
       </div>
     );
   }

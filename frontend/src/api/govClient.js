@@ -25,27 +25,16 @@ async function safeFetch(url) {
 // ──────────────────────────────────────────────────────
 // 1. National Index Trend  (REAL + MOCK historical fill)
 // ──────────────────────────────────────────────────────
-const MOCK_NATIONAL_HISTORY = [
-  { date: '2026-08-25', value: 100.0 },
-  { date: '2026-08-26', value: 100.8 },
-  { date: '2026-08-27', value: 101.3 },
-  { date: '2026-08-28', value: 99.7 },
-  { date: '2026-08-29', value: 100.2 },
-  { date: '2026-08-30', value: 101.5 },
-  { date: '2026-08-31', value: 100.0 },
-  { date: '2026-09-01', value: 95.2 },
-  { date: '2026-09-02', value: 102.5 },
-];
-
 export const getNationalIndexTrend = async () => {
-  const live = await safeFetch(`${API_BASE}/index/daily`);
-  if (live && !live.error) {
-    const history = MOCK_NATIONAL_HISTORY.filter(d => d.date !== live.date);
-    history.push({ date: live.date, value: live.value, ota_premium_pct: live.ota_premium_pct });
-    history.sort((a, b) => a.date.localeCompare(b.date));
-    return history;
+  const historyData = await safeFetch(`${API_BASE}/index/history?days=30`);
+  if (historyData && historyData.status === 'success' && historyData.records) {
+    return historyData.records.map(r => ({
+      date: r.date,
+      value: r.composite_fare_index,
+      ota_premium_pct: 0
+    }));
   }
-  return MOCK_NATIONAL_HISTORY;
+  return [];
 };
 
 // ──────────────────────────────────────────────────────
@@ -188,34 +177,49 @@ export const getRouteTrajectoryData = async (routePair = 'DEL-BOM') => {
   const fares = await safeFetch(`${API_BASE}/fares/raw`);
 
   const windows = [1, 7, 15, 30, 45];
-  const medians = { 1: 0, 7: 0, 15: 0, 30: 0, 45: 0 };
+  const medians = { 1: null, 7: null, 15: null, 30: null, 45: null };
+  const interpolated = { 1: false, 7: false, 15: false, 30: false, 45: false };
   
   if (fares && Array.isArray(fares)) {
+    // Include both airline_direct and OTAs to maximize data availability
     const routeFares = fares.filter(f => {
       const r = `${f.origin}-${f.destination}`;
-      return r === routePair && f.status === 'ok' && f.outlier_flag !== true && f.outlier_flag !== 'True' && f.source === 'airline_direct';
+      return r === routePair && f.status === 'ok' && f.outlier_flag !== true && f.outlier_flag !== 'True';
     });
     
+    // Calculate overall route median as a robust fallback
+    let routeMedian = 5000;
+    if (routeFares.length > 0) {
+      const allPrices = routeFares.map(f => Number(f.total_fare)).sort((a, b) => a - b);
+      routeMedian = allPrices[Math.floor(allPrices.length / 2)];
+    }
+
     windows.forEach(w => {
       const windowFares = routeFares.filter(f => f.advance_purchase_days === w);
       if (windowFares.length > 0) {
         const prices = windowFares.map(f => Number(f.total_fare)).sort((a, b) => a - b);
         medians[w] = prices[Math.floor(prices.length / 2)];
-      } else {
-        // Fallback if data is missing for a horizon
-        medians[w] = 5000;
       }
     });
+
+    // Smart fallback for missing windows: interpolate or use route median with a curve
+    if (!medians[45]) { medians[45] = medians[30] || Math.round(routeMedian * 0.9); interpolated[45] = true; }
+    if (!medians[30]) { medians[30] = medians[45] || medians[15] || Math.round(routeMedian * 0.95); interpolated[30] = true; }
+    if (!medians[15]) { medians[15] = medians[30] || medians[7] || routeMedian; interpolated[15] = true; }
+    if (!medians[7]) { medians[7] = medians[15] || medians[1] || Math.round(routeMedian * 1.15); interpolated[7] = true; }
+    if (!medians[1]) { medians[1] = medians[7] ? Math.round(medians[7] * 1.2) : Math.round(routeMedian * 1.5); interpolated[1] = true; }
+    
   } else {
-    windows.forEach(w => medians[w] = 5000);
+    // Ultimate fallback if API is completely empty
+    windows.forEach(w => { medians[w] = 5000; interpolated[w] = true; });
   }
 
   return [
-    { window: 'T+1', date: 'T+1d', value: medians[1] },
-    { window: 'T+7', date: 'T+7d', value: medians[7] },
-    { window: 'T+15', date: 'T+15d', value: medians[15] },
-    { window: 'T+30', date: 'T+30d', value: medians[30] },
-    { window: 'T+45', date: 'T+45d', value: medians[45] },
+    { window: 'T+1', date: 'T+1d', value: medians[1], isInterpolated: interpolated[1] },
+    { window: 'T+7', date: 'T+7d', value: medians[7], isInterpolated: interpolated[7] },
+    { window: 'T+15', date: 'T+15d', value: medians[15], isInterpolated: interpolated[15] },
+    { window: 'T+30', date: 'T+30d', value: medians[30], isInterpolated: interpolated[30] },
+    { window: 'T+45', date: 'T+45d', value: medians[45], isInterpolated: interpolated[45] },
   ];
 };
 

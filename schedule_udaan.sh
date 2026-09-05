@@ -29,6 +29,8 @@ EXIT_CODE=$?
 echo "====================================================="
 if [ $EXIT_CODE -eq 0 ]; then
     echo " ✅  Orchestrator completed successfully."
+    echo " 🔄  Running Data Pipeline to update Parquet Backend..."
+    export PYTHONPATH=. && python3 core/run_pipeline.py
 else
     echo " ❌  Orchestrator exited with code $EXIT_CODE."
 fi

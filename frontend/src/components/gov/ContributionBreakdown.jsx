@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonChart } from '../common/SkeletonLoaders.jsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { getRouteContribution } from '../../api/govClient.js';
 
@@ -56,15 +57,7 @@ const ContributionBreakdown = () => {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="bg-white border border-border p-6">
-        <div className="h-64 flex items-center justify-center">
-          <p className="font-sans text-sm text-textSecondary animate-pulse">Computing contribution breakdown...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <SkeletonChart height="h-64" />;
 
   const topRoute = data.length > 0 ? data[0] : null;
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonChart } from './common/SkeletonLoaders.jsx';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { getRouteIndex, getRawFares, getHeatmap } from '../api/client.js';
 
@@ -260,7 +261,7 @@ const LiveDataTab = () => {
               <span className="font-sans text-[10px] opacity-70">₹{h.current_fare.toLocaleString()}</span>
             </div>
           ))}
-          {heatmapData.length === 0 && <p className="text-sm text-textSecondary col-span-full">Loading heatmap data...</p>}
+          {heatmapData.length === 0 && <SkeletonChart height="h-64" title={false} />}
         </div>
       </div>
 

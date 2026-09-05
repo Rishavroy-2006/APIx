@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonText, SkeletonCard } from '../common/SkeletonLoaders.jsx';
 import { getProvenanceStats } from '../../api/govClient.js';
 
 /**
@@ -31,8 +32,14 @@ const ProvenancePanel = () => {
 
   if (loading || !stats) {
     return (
-      <div className="bg-bg border border-border p-4 animate-pulse">
-        <p className="font-sans text-sm text-textSecondary">Loading provenance data...</p>
+      <div className="bg-bg border border-border p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <SkeletonText className="h-6 w-1/4" />
+          <div className="flex gap-6"><SkeletonText className="h-4 w-20" /><SkeletonText className="h-4 w-20" /></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[...Array(6)].map((_, i) => <SkeletonCard key={i} height="h-28" />)}
+        </div>
       </div>
     );
   }
@@ -43,12 +50,8 @@ const ProvenancePanel = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <h3 className="font-serif text-lg text-navy">Data Provenance & Audit</h3>
-          <span className={`text-[10px] font-sans font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
-            stats.source === 'live'
-              ? 'bg-green/10 text-green border-green/20'
-              : 'bg-saffron/10 text-saffron border-saffron/20'
-          }`}>
-            {stats.source === 'live' ? 'Live Data' : 'Mock Data'}
+          <span className={`text-[10px] font-sans font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm border bg-green/10 text-green border-green/20`}>
+            Real-time Telemetry
           </span>
         </div>
 

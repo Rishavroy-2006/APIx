@@ -24,7 +24,8 @@ share/python-wheels/
 MANIFEST
 
 # Environment
-.env
+.env*
+!.env.example
 .venv
 venv/
 ENV/

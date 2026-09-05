@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonChart } from '../common/SkeletonLoaders.jsx';
 import { getRouteHeatmapData, getVolatilityData } from '../../api/govClient.js';
 import VolatilitySignal from './VolatilitySignal.jsx';
 
@@ -71,15 +72,7 @@ const RouteHeatmap = () => {
     return aVal < bVal ? 1 : -1;
   });
 
-  if (loading) {
-    return (
-      <div className="bg-white border border-border p-6">
-        <div className="h-48 flex items-center justify-center">
-          <p className="font-sans text-sm text-textSecondary animate-pulse">Loading route heatmap...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <SkeletonChart height="h-[28rem]" />;
 
   const columns = [
     { key: 'route', label: 'Corridor', align: 'left' },
